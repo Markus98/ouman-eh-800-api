@@ -1,6 +1,8 @@
 import asyncio
 import logging
-from typing import NamedTuple
+from datetime import datetime, timezone
+from email.utils import formatdate
+from typing import Iterable, NamedTuple
 
 import aiohttp
 from aiohttp import ClientSession
@@ -53,12 +55,24 @@ class OumanEh800Client:
             values=values_result,
         )
 
-    def _construct_request_url(self, path: str, params: list[str]) -> str:
-        base = f"{self._address}/{path}?"
-        request_url = base + ";".join(params)
+    def _construct_request_url(self, path: str, params: Iterable[str]) -> str:
+        request_url = f"{self._address}/{path}"
+        # Append gmt string and equals symbol to match what the web UI does.
+        # The requests work without this param as well, except when there are no other params.
+        gmt_string_param = (
+            formatdate(
+                timeval=datetime.now(timezone.utc).timestamp(),
+                localtime=False,
+                usegmt=True,
+            )
+            + "="
+        )
+        params = list(params)
+        params.append(gmt_string_param)
+        request_url += "?" + ";".join(params)
         return request_url
 
-    async def _request(self, path: str, params: list[str]) -> OumanResponse:
+    async def _request(self, path: str, params: Iterable[str]) -> OumanResponse:
         request_url = self._construct_request_url(path, params)
         try:
             async with asyncio.timeout(10):
@@ -77,7 +91,7 @@ class OumanEh800Client:
         except aiohttp.ClientError as err:
             raise OumanClientCommunicationError(f"Network error: {err}") from err
 
-    async def _login(self) -> OumanResponse:
+    async def login(self) -> OumanResponse:
         response = await self._request(
             "login", [f"uid={self._username}", f"pwd={self._password}"]
         )
@@ -87,7 +101,9 @@ class OumanEh800Client:
         elif response.values.get("result") == "error":
             raise OumanClientAuthenticationError("Wrong username or password")
         else:
-            raise OumanClientError(f"Unexpected response from login request: {response}")
+            raise OumanClientError(
+                f"Unexpected response from login request: {response}"
+            )
         return response
 
     async def get_values(self):
@@ -111,10 +127,10 @@ class OumanEh800Client:
         import json
         _LOGGER.info(json.dumps(result, indent=2))
 
-    async def update_values(self) -> OumanResponse:
+    async def _update_values(self, key_value_params: dict[str, str]) -> OumanResponse:
         request_path = "update"
-        # TODO: move params var to acutal params
-        params = ["S_135_85=0","S_222_85=0"]
+        # params = ["S_135_85=0", "S_222_85=0"]
+        params = [f"{key}={value}" for key, value in key_value_params.items()]
         try:
             response = await self._request(request_path, params)
         except OumanClientCommunicationError as err:
@@ -122,12 +138,15 @@ class OumanEh800Client:
                 raise
             if err.__cause__.status == 404:
                 _LOGGER.debug("404 response from update request, logging in...")
-                await self._login()
+                await self.login()
                 response = await self._request(request_path, params)
         return response
 
+    # TODO: get values for if L2 is installed, and if room sensors are installed for l1 or l2
+
     async def get_alarms(self):
-        raise NotImplementedError()
+        response = await self._request("alarms", [])
+        return response
 
     async def get_available_settings(self):
         raise NotImplementedError()
@@ -138,3 +157,10 @@ class OumanEh800Client:
     async def get_available_relay(self):
         raise NotImplementedError()
 
+    async def logout(self) -> OumanResponse:
+        response = await self._request("logout", [])
+        if response.values.get("result") != "ok":
+            raise OumanClientError(
+                f"Unexpected response from logout request: {response}"
+            )
+        return response

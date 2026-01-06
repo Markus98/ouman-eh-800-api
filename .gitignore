@@ -9,6 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
-# Other
+# Test related
+.coverage
+
+# Env
 .env
 .envrc

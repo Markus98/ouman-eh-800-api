@@ -1,5 +1,7 @@
 import asyncio
+from datetime import datetime, timezone
 from typing import AsyncGenerator
+from unittest.mock import MagicMock
 
 import pytest
 import pytest_asyncio
@@ -17,14 +19,28 @@ MOCK_USERNAME = "user"
 MOCK_PASSWORD = "password"
 
 
+MOCK_DATE_PARAM = "Tue%252C+06+Jan+2026+12%253A00%253A00+GMT%253D" # "Tue, 06 Jan 2026 12:00:00 GMT="
+MOCK_LOGIN_URL = f"{MOCK_ADDRESS}/login?uid={MOCK_USERNAME}%253Bpwd%253D{MOCK_PASSWORD}%253B{MOCK_DATE_PARAM}"
+MOCK_LOGOUT_URL = f"{MOCK_ADDRESS}/logout?{MOCK_DATE_PARAM}"
+
+
+@pytest.fixture(autouse=True)
+def mock_datetime_now_for_client(monkeypatch):
+    fake_now = datetime(2026, 1, 6, 12, 0, 0, tzinfo=timezone.utc)
+    mock_dt = MagicMock(wraps=datetime)
+    mock_dt.now.return_value = fake_now
+
+    monkeypatch.setattr("ouman_eh_800_api.client.datetime", mock_dt)
+
+
 @pytest_asyncio.fixture
-async def client(session: ClientSession) -> AsyncGenerator[OumanEh800Client, None]:
+async def client(session: ClientSession) -> OumanEh800Client:
     """Fixture to create a client instance."""
     return OumanEh800Client(
         session=session,
-        address="http://10.0.0.1",
-        username="user",
-        password="password",
+        address=MOCK_ADDRESS,
+        username=MOCK_USERNAME,
+        password=MOCK_PASSWORD,
     )
 
 
@@ -42,9 +58,6 @@ async def m() -> AsyncGenerator[aioresponses, None]:
         yield mock
 
 
-MOCK_LOGIN_URL = f"{MOCK_ADDRESS}/login?uid={MOCK_USERNAME}%253Bpwd%253D{MOCK_PASSWORD}"
-
-
 @pytest.mark.asyncio
 async def test_login_success(client: OumanEh800Client, m: aioresponses):
     m.get(
@@ -53,7 +66,7 @@ async def test_login_success(client: OumanEh800Client, m: aioresponses):
         status=200,
     )
 
-    result = await client._login()
+    result = await client.login()
 
     assert result.prefix == "login"
     assert result.values["result"] == "ok"
@@ -68,7 +81,7 @@ async def test_login_failure(client: OumanEh800Client, m: aioresponses):
     )
 
     with pytest.raises(OumanClientAuthenticationError):
-        await client._login()
+        await client.login()
 
 
 @pytest.mark.asyncio
@@ -76,8 +89,22 @@ async def test_login_timeout(client: OumanEh800Client, m: aioresponses):
     m.get(MOCK_LOGIN_URL, exception=asyncio.TimeoutError)
 
     with pytest.raises(OumanClientCommunicationError):
-        await client._login()
+        await client.login()
 
+@pytest.mark.asyncio
+async def test_logout_success(client: OumanEh800Client, m: aioresponses):
+    m.get(
+        MOCK_LOGOUT_URL,
+        body="logout?result=ok;\x00",
+        status=200,
+    )
+
+    result = await client.logout()
+
+    assert result.prefix == "logout"
+    assert result.values["result"] == "ok"
+
+# TODO: test update values with intial 404 error
 
 @pytest.mark.parametrize(
     "response_text,prefix,params_n",
