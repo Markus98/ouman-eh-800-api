@@ -21,12 +21,19 @@ from .exceptions import (
     OumanClientCommunicationError,
     OumanClientError,
 )
-from .registry import L1Endpoints, OumanRegistry, SystemEndpoints
+from .registry import (
+    L1Endpoints,
+    L1EndpointsWithRoomSensor,
+    L2Endpoints,
+    L2EndpointsWithRoomSensor,
+    OumanRegistry,
+    SystemEndpoints,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class OumanResponse(NamedTuple):
+class _OumanResponse(NamedTuple):
     prefix: str
     values: Mapping[str, str]
 
@@ -41,7 +48,7 @@ class OumanEh800Client:
         self._password = password
 
     @staticmethod
-    def _parse_api_response(response_text: str) -> OumanResponse:
+    def _parse_api_response(response_text: str) -> _OumanResponse:
         prefix, key_val_str = response_text.split("?", maxsplit=1)
         pairs = [p for p in key_val_str.split(";") if p.strip()]
 
@@ -59,7 +66,7 @@ class OumanEh800Client:
                     "Skipping malformed key value pair in Ouman response: '%s'", pair
                 )
 
-        return OumanResponse(
+        return _OumanResponse(
             prefix=prefix,
             values=values_result,
         )
@@ -81,7 +88,7 @@ class OumanEh800Client:
         request_url += "?" + ";".join(params)
         return request_url
 
-    async def _request(self, path: str, params: Iterable[str]) -> OumanResponse:
+    async def _request(self, path: str, params: Iterable[str]) -> _OumanResponse:
         request_url = self._construct_request_url(path, params)
         try:
             async with asyncio.timeout(10):
@@ -100,7 +107,7 @@ class OumanEh800Client:
         except aiohttp.ClientError as err:
             raise OumanClientCommunicationError(f"Network error: {err}") from err
 
-    async def login(self) -> OumanResponse:
+    async def login(self) -> None:
         response = await self._request(
             "login", [f"uid={self._username}", f"pwd={self._password}"]
         )
@@ -113,21 +120,26 @@ class OumanEh800Client:
             raise OumanClientError(
                 f"Unexpected response from login request: {response}"
             )
+
+    async def _get_values(self, endpoint_ids: Sequence[str]) -> _OumanResponse:
+        response = await self._request("request", endpoint_ids)
+        for endpoint_id in endpoint_ids:
+            if endpoint_id not in response.values:
+                _LOGGER.warning(
+                    "Requested endpoint ID '%s' not found in response", endpoint_id
+                )
         return response
 
-    async def get_values(
+    async def get_registry_values(
         self, registries: Sequence[type[OumanRegistry]]
     ) -> dict[OumanEndpoint, OumanValues]:
-        """Get all available values from the Ouman device"""
-        params = [
+        """Get all values from the specified endpoint registries"""
+        endpoint_ids = [
             endpoint_id
             for registry in registries
             for endpoint_id in registry.get_sensor_endpoint_ids()
         ]
-        response = await self._request("request", params)
-        for param in params:
-            if param not in response.values:
-                _LOGGER.warning("Requested param '%s' not found in response", param)
+        response = await self._get_values(endpoint_ids)
 
         def get_endpoint_from_id(id: str) -> OumanEndpoint | None:
             for registry in registries:
@@ -145,15 +157,11 @@ class OumanEh800Client:
             parsed_value = endpoint.parse_value(value)
             result[endpoint] = parsed_value
 
-        # FIXME: remove debug logging code
-        # from pprint import pformat
-        # for key, value in result.items():
-        #     print(f"{pformat(key, indent=2, compact=False)}: {value}")
         return result
 
     async def _update_values(
         self, key_value_params: Mapping[str, str]
-    ) -> OumanResponse:
+    ) -> _OumanResponse:
         request_path = "update"
         params = [f"{key}={value}" for key, value in key_value_params.items()]
         try:
@@ -366,11 +374,65 @@ class OumanEh800Client:
         self, temperature: float
     ) -> float:
         result = await self._set_float_endpoint(
-            L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING_WITH_SENSOR, temperature
+            L1EndpointsWithRoomSensor.ROOM_TEMPERATURE_FINE_TUNING, temperature
         )
         return result
 
-    # TODO: get values for if L2 is installed, and if room sensors are installed for l1 or l2
+    async def get_l1_values(self) -> dict[OumanEndpoint, OumanValues]:
+        result = await self.get_registry_values([L1Endpoints])
+        return result
+
+    async def get_is_l2_installed(self) -> bool:
+        endpoint_id = SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id
+        response = await self._get_values([endpoint_id])
+        value = response.values.get(endpoint_id)
+        if value is None:
+            raise ValueError("Response value should be defined")
+
+        # FIXME:
+        # This is a temporary solution. It hasn't been tested what the
+        # endpoint returns when L2 is installed, so now we
+        # just assume that when the value differs from the falsy value,
+        # it is means it is truthy and L2 is installed.
+        return value != "0"
+
+    async def _get_is_room_sensor_installed(self, endpoint_id: str) -> bool:
+        response = await self._get_values([endpoint_id])
+        value = response.values.get(endpoint_id)
+        if value is None:
+            raise ValueError("Response value should be defined")
+
+        # FIXME:
+        # This is a temporary solution. It hasn't been tested what the
+        # endpoint returns when a room sensor is installed, so now we
+        # just assume that when the value differs from the falsy value,
+        # it is means it is truthy and a room sensor is installed.
+        return value != "off"
+
+    async def get_is_l1_room_sensor_installed(self) -> bool:
+        return await self._get_is_room_sensor_installed(
+            L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
+        )
+
+    async def get_is_l2_room_sensor_installed(self) -> bool:
+        return await self._get_is_room_sensor_installed(
+            L2Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
+        )
+
+    async def get_active_registries(self) -> list[type[OumanRegistry]]:
+        """Get the list of active registries which contain the sets of
+        endpoints that can currently be read and written to."""
+        registries: list[type[OumanRegistry]] = [SystemEndpoints]
+        if await self.get_is_l1_room_sensor_installed():
+            registries.append(L1EndpointsWithRoomSensor)
+        else:
+            registries.append(L1Endpoints)
+        if await self.get_is_l2_installed():
+            if await self.get_is_l2_room_sensor_installed():
+                registries.append(L2EndpointsWithRoomSensor)
+            else:
+                registries.append(L2Endpoints)
+        return registries
 
     async def get_alarms(self):
         response = await self._request("alarms", [])
@@ -385,10 +447,9 @@ class OumanEh800Client:
     async def get_available_relay(self):
         raise NotImplementedError()
 
-    async def logout(self) -> OumanResponse:
+    async def logout(self) -> None:
         response = await self._request("logout", [])
         if response.values.get("result") != "ok":
             raise OumanClientError(
                 f"Unexpected response from logout request: {response}"
             )
-        return response

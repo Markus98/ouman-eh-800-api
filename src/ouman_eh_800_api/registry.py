@@ -13,20 +13,31 @@ from .endpoint import (
 
 class OumanRegistry:
     @classmethod
-    def _iterate(cls) -> Generator[OumanEndpoint]:
-        """Return an iterator which iterates over all of the OumanEndpoints in this registry"""
-        return (v for k, v in cls.__dict__.items() if isinstance(v, OumanEndpoint))
+    def _iterate_endpoints(cls) -> Generator[OumanEndpoint, None, None]:
+        """Iterate over all OumanEndpoints in this class and its
+        parents. Subclass definitions override parent class
+        definitions."""
+        seen_keys = set()
+        for base in cls.mro():
+            for key, value in base.__dict__.items():
+                # Avoid yielding the same endpoint twice if overridden
+                if key not in seen_keys and isinstance(value, OumanEndpoint):
+                    seen_keys.add(key)
+                    yield value
 
     @classmethod
     @lru_cache(maxsize=1)
     def get_sensor_endpoint_ids(cls) -> Sequence[str]:
         """Get all sensor endpoint IDs in this registry"""
-        return [endpoint.sensor_endpoint_id for endpoint in cls._iterate()]
+        return [endpoint.sensor_endpoint_id for endpoint in cls._iterate_endpoints()]
 
     @classmethod
     @lru_cache(maxsize=1)
     def _sensor_id_endpoint_map(cls) -> Mapping[str, OumanEndpoint]:
-        return {endpoint.sensor_endpoint_id: endpoint for endpoint in cls._iterate()}
+        return {
+            endpoint.sensor_endpoint_id: endpoint
+            for endpoint in cls._iterate_endpoints()
+        }
 
     @classmethod
     def get_endpoint_by_sensor_id(cls, sensor_endpoint_id: str) -> OumanEndpoint | None:
@@ -169,15 +180,6 @@ class L1Endpoints(OumanRegistry):
         max_val=4.0,
     )
 
-    ROOM_TEMPERATURE_FINE_TUNING_WITH_SENSOR = FloatControlOumanEndpoint(
-        name="l1_room_temperature_fine_tuning_with_sensor",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_102_85",
-        control_endpoint_id="@_S_102_85",
-        min_val=-4.0,
-        max_val=4.0,
-    )
-
     HEATING_SHUTDOWN_STATUS = OumanEndpoint(
         name="l1_heating_shutdown_status",
         unit=OumanUnit.TEXT,
@@ -202,12 +204,6 @@ class L1Endpoints(OumanRegistry):
         sensor_endpoint_id="S_259_85",
     )
 
-    ROOM_TEMPERATURE = NumberOumanEndpoint(
-        name="l1_room_temperature",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_261_85",
-    )
-
     VALVE_POSITION = NumberOumanEndpoint(
         name="l1_valve_position",
         unit=OumanUnit.PERCENT,
@@ -226,16 +222,38 @@ class L1Endpoints(OumanRegistry):
         sensor_endpoint_id="S_278_85",
     )
 
+    # TODO: make this into an enum endpoint when we know what other
+    # values are possible besides "off"
+    ROOM_SENSOR_INSTALLED = OumanEndpoint(
+        name="l1_room_sensor_installed",
+        unit=OumanUnit.TEXT,
+        sensor_endpoint_id="S_261_111",
+    )
+
+
+# NOTE: Functionality not verified.
+class L1EndpointsWithRoomSensor(L1Endpoints):
     ROOM_SENSOR_POTENTIOMETER = NumberOumanEndpoint(
         name="l1_room_sensor_potentiometer",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_274_85",
     )
 
-    ROOM_SENSOR_INSTALLED = OumanEndpoint(
-        name="l1_room_sensor_installed",
-        unit=OumanUnit.TEXT,
-        sensor_endpoint_id="S_261_111",
+    ROOM_TEMPERATURE = NumberOumanEndpoint(
+        name="l1_room_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_261_85",
+    )
+
+    # NOTE: This overrides the one in L1Endpoints since the control
+    # endpoint is different when a room sensor is installed.
+    ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
+        name="l1_room_temperature_fine_tuning",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_102_85",
+        control_endpoint_id="@_S_102_85",
+        min_val=-4.0,
+        max_val=4.0,
     )
 
 
@@ -331,15 +349,6 @@ class L2Endpoints(OumanRegistry):
         max_val=4.0,
     )
 
-    ROOM_TEMPERATURE_FINE_TUNING_WITH_SENSOR = FloatControlOumanEndpoint(
-        name="l2_room_temperature_fine_tuning_with_sensor",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_189_85",
-        control_endpoint_id="@_S_189_85",
-        min_val=-4.0,
-        max_val=4.0,
-    )
-
     TEMPERATURE_LEVEL_STATUS_TEXT = OumanEndpoint(
         name="l2_temperature_level_status_text",
         unit=OumanUnit.TEXT,
@@ -358,12 +367,6 @@ class L2Endpoints(OumanRegistry):
         sensor_endpoint_id="S_293_85",
     )
 
-    ROOM_TEMPERATURE = NumberOumanEndpoint(
-        name="l2_room_temperature",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_295_85",
-    )
-
     SUPPLY_WATER_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
         name="l2_supply_water_temperature_setpoint",
         unit=OumanUnit.CELSIUS,
@@ -376,14 +379,35 @@ class L2Endpoints(OumanRegistry):
         sensor_endpoint_id="S_313_85",
     )
 
+    # TODO: make this into an enum endpoint when we know what other
+    # values are possible besides "off"
+    ROOM_SENSOR_INSTALLED = OumanEndpoint(
+        name="l2_room_sensor_installed",
+        unit=OumanUnit.TEXT,
+        sensor_endpoint_id="S_295_111",
+    )
+
+
+class L2EndpointsWithRoomSensor(L2Endpoints):
     ROOM_SENSOR_POTENTIOMETER = NumberOumanEndpoint(
         name="l2_room_sensor_potentiometer",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_307_85",
     )
 
-    ROOM_SENSOR_INSTALLED = OumanEndpoint(
-        name="l2_room_sensor_installed",
-        unit=OumanUnit.TEXT,
-        sensor_endpoint_id="S_295_111",
+    ROOM_TEMPERATURE = NumberOumanEndpoint(
+        name="l2_room_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_295_85",
+    )
+
+    # NOTE: This overrides the one in L2Endpoints since the control
+    # endpoint is different when a room sensor is installed.
+    ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
+        name="l2_room_temperature_fine_tuning",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_189_85",
+        control_endpoint_id="@_S_189_85",
+        min_val=-4.0,
+        max_val=4.0,
     )

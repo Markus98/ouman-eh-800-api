@@ -12,6 +12,7 @@ from ouman_eh_800_api.client import OumanEh800Client
 from ouman_eh_800_api.exceptions import (
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
+    OumanClientError,
 )
 
 MOCK_ADDRESS = "http://10.0.0.1"
@@ -19,7 +20,9 @@ MOCK_USERNAME = "user"
 MOCK_PASSWORD = "password"
 
 
-MOCK_DATE_PARAM = "Tue%252C+06+Jan+2026+12%253A00%253A00+GMT%253D" # "Tue, 06 Jan 2026 12:00:00 GMT="
+MOCK_DATE_PARAM = (
+    "Tue%252C+06+Jan+2026+12%253A00%253A00+GMT%253D"  # "Tue, 06 Jan 2026 12:00:00 GMT="
+)
 MOCK_LOGIN_URL = f"{MOCK_ADDRESS}/login?uid={MOCK_USERNAME}%253Bpwd%253D{MOCK_PASSWORD}%253B{MOCK_DATE_PARAM}"
 MOCK_LOGOUT_URL = f"{MOCK_ADDRESS}/logout?{MOCK_DATE_PARAM}"
 
@@ -66,10 +69,7 @@ async def test_login_success(client: OumanEh800Client, m: aioresponses):
         status=200,
     )
 
-    result = await client.login()
-
-    assert result.prefix == "login"
-    assert result.values["result"] == "ok"
+    await client.login()
 
 
 @pytest.mark.asyncio
@@ -91,6 +91,7 @@ async def test_login_timeout(client: OumanEh800Client, m: aioresponses):
     with pytest.raises(OumanClientCommunicationError):
         await client.login()
 
+
 @pytest.mark.asyncio
 async def test_logout_success(client: OumanEh800Client, m: aioresponses):
     m.get(
@@ -99,12 +100,23 @@ async def test_logout_success(client: OumanEh800Client, m: aioresponses):
         status=200,
     )
 
-    result = await client.logout()
+    await client.logout()
 
-    assert result.prefix == "logout"
-    assert result.values["result"] == "ok"
+
+@pytest.mark.asyncio
+async def test_logout_failure(client: OumanEh800Client, m: aioresponses):
+    m.get(
+        MOCK_LOGIN_URL,
+        body="logout?result=error;\x00",
+        status=200,
+    )
+
+    with pytest.raises(OumanClientError):
+        await client.logout()
+
 
 # TODO: test update values with intial 404 error
+
 
 @pytest.mark.parametrize(
     "response_text,prefix,params_n",
