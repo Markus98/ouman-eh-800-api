@@ -2,23 +2,25 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 from email.utils import formatdate
-from typing import Iterable, Mapping, NamedTuple
+from typing import Iterable, Mapping, NamedTuple, Sequence
 
 import aiohttp
 from aiohttp import ClientSession
 
 from .const import (
-    ENDPOINT_VALUE_MAPPING,
-    ENDPOINTS,
     ControlEnum,
     HomeAwayControl,
     OperationMode,
 )
 from .endpoint import (
+    ControllableEndpoint,
     EnumControlOumanEndpoint,
     FloatControlOumanEndpoint,
     IntControlOumanEndpoint,
     L1Endpoints,
+    OumanEndpoint,
+    OumanRegistry,
+    OumanValues,
     SystemEndpoints,
 )
 from .exceptions import (
@@ -119,27 +121,41 @@ class OumanEh800Client:
             )
         return response
 
-    async def get_values(self):
+    async def get_values(
+        self, registries: Sequence[type[OumanRegistry]]
+    ) -> dict[OumanEndpoint, OumanValues]:
         """Get all available values from the Ouman device"""
-        params = ENDPOINTS.keys()
+        params = [
+            endpoint_id
+            for registry in registries
+            for endpoint_id in registry.get_sensor_endpoint_ids()
+        ]
         response = await self._request("request", params)
         for param in params:
             if param not in response.values:
                 _LOGGER.warning("Requested param '%s' not found in response", param)
 
-        # TODO: actually do something with the values
-        result = {**response.values}
-        result = {
-            ENDPOINTS.get(key, key): ENDPOINT_VALUE_MAPPING.get(key, {}).get(
-                value, value
-            )
-            for key, value in result.items()
-        }
+        def get_endpoint_from_id(id: str) -> OumanEndpoint | None:
+            for registry in registries:
+                endpoint = registry.get_endpoint_by_sensor_id(id)
+                if endpoint:
+                    return endpoint
+            return None
 
-        # FIXME: remove debugging lines
-        import json
+        result = {}
+        for key, value in response.values.items():
+            endpoint = get_endpoint_from_id(key)
+            if not endpoint:
+                _LOGGER.warning(f"Unknown endpoint ID in response: '{key}'")
+                continue
+            parsed_value = endpoint.parse_value(value)
+            result[endpoint] = parsed_value
 
-        _LOGGER.info(json.dumps(result, indent=2))
+        # FIXME: remove debug logging code
+        # from pprint import pformat
+        # for key, value in result.items():
+        #     print(f"{pformat(key, indent=2, compact=False)}: {value}")
+        return result
 
     async def _update_values(
         self, key_value_params: Mapping[str, str]
@@ -159,7 +175,7 @@ class OumanEh800Client:
 
     async def _set_int_endpoint(
         self, endpoint: IntControlOumanEndpoint, value: int
-    ) -> OumanResponse:
+    ) -> int:
         if not (endpoint.min_val <= value <= endpoint.max_val):
             raise ValueError(
                 f"Value for {endpoint.name} out of bounds [{endpoint.min_val},{endpoint.max_val}]: {value}"
@@ -173,7 +189,7 @@ class OumanEh800Client:
             )
 
         try:
-            float_result = float(result_value)
+            float_result = endpoint.parse_value(result_value)
         except ValueError as err:
             raise OumanClientError(
                 f"API returned value cannot be parsed into a float: {result}"
@@ -184,11 +200,11 @@ class OumanEh800Client:
                 f"Returned float does not match set int value. Got {result_value}, expected {value}"
             )
 
-        return result
+        return int(float_result)
 
     async def _set_float_endpoint(
         self, endpoint: FloatControlOumanEndpoint, value: float
-    ) -> OumanResponse:
+    ) -> float:
         """Sets an endpoint value for endpoints which accept floating
         point numbers. Values are rounded to the precision of one
         decimal."""
@@ -206,7 +222,7 @@ class OumanEh800Client:
             )
 
         try:
-            float_result = float(result_value)
+            float_result = endpoint.parse_value(result_value)
         except ValueError as err:
             raise OumanClientError(
                 f"API returned value cannot be parsed into a float: {result}"
@@ -217,11 +233,11 @@ class OumanEh800Client:
                 f"Returned float does not match set value. Got {result_value}, expected {value}"
             )
 
-        return result
+        return float_result
 
     async def _set_enum_endpoint(
         self, endpoint: EnumControlOumanEndpoint, value: ControlEnum
-    ) -> OumanResponse:
+    ) -> ControlEnum:
         if not isinstance(value, endpoint.enum_type):
             raise TypeError(
                 f"Unexpected type for {endpoint.name} value. Expected {endpoint.enum_type}, got {value}."
@@ -239,47 +255,96 @@ class OumanEh800Client:
             raise OumanClientError(
                 f"Returned value does not match str enum value. Got '{result_value}', expected '{value}'"
             )
+        try:
+            enum_result = endpoint.parse_value(result_value)
+        except ValueError as err:
+            raise OumanClientError(
+                f"API returned value cannot be parsed into an enum: {enum_result}"
+            ) from err
+        return enum_result
+
+    async def set_endpoint_value(
+        self,
+        endpoint: ControllableEndpoint,
+        value: OumanValues | int,
+    ) -> OumanValues:
+        if not isinstance(endpoint, ControllableEndpoint):
+            raise TypeError(f"Endpoint {endpoint} is not a controllable endpoint.")
+
+        result: OumanValues
+        if isinstance(endpoint, IntControlOumanEndpoint):
+            if not isinstance(value, (int, float)):
+                raise TypeError(
+                    f"Value for {endpoint.name} must be numeric, got {type(value).__name__}"
+                )
+            if not value.is_integer():
+                raise ValueError(
+                    f"Value for {endpoint.name} must be an integer, got {value}"
+                )
+            result = await self._set_int_endpoint(endpoint, int(value))
+        elif isinstance(endpoint, FloatControlOumanEndpoint):
+            if not isinstance(value, (int, float)):
+                raise TypeError(
+                    f"Value for {endpoint.name} must be numeric, got {type(value).__name__}"
+                )
+            result = await self._set_float_endpoint(endpoint, value)
+        elif isinstance(endpoint, EnumControlOumanEndpoint):
+            if not isinstance(value, ControlEnum):
+                raise TypeError(
+                    f"Value for {endpoint.name} must be a ControlEnum, "
+                    f"got {type(value).__name__}"
+                )
+            result = await self._set_enum_endpoint(endpoint, value)
+        else:
+            raise NotImplementedError(
+                f"No control handler implemented for {type(endpoint).__name__}"
+            )
+
         return result
 
-    async def set_home_away(self, value: HomeAwayControl) -> OumanResponse:
+    async def set_home_away(self, value: HomeAwayControl) -> HomeAwayControl:
         result = await self._set_enum_endpoint(SystemEndpoints.HOME_AWAY_MODE, value)
+        if not isinstance(result, HomeAwayControl):
+            raise TypeError(f"Unexpected return type: {type(result).__name__}")
         return result
 
-    async def set_trend_sample_interval(self, value: int) -> OumanResponse:
+    async def set_trend_sample_interval(self, value: int) -> int:
         result = await self._set_int_endpoint(
             SystemEndpoints.TREND_SAMPLE_INTERVAL, value
         )
         return result
 
-    async def set_l1_operation_mode(self, value: OperationMode) -> OumanResponse:
+    async def set_l1_operation_mode(self, value: OperationMode) -> OperationMode:
         result = await self._set_enum_endpoint(L1Endpoints.OPERATION_MODE, value)
+        if not isinstance(result, OperationMode):
+            raise TypeError(f"Unexpected return type: {type(result).__name__}")
         return result
 
-    async def set_l1_valve_position_setpoint(self, position: int) -> OumanResponse:
+    async def set_l1_valve_position_setpoint(self, position: int) -> int:
         result = await self._set_int_endpoint(
             L1Endpoints.VALVE_POSITION_SETPOINT, position
         )
         return result
 
-    async def set_l1_curve_minus_20_temp(self, temperature: int) -> OumanResponse:
+    async def set_l1_curve_minus_20_temp(self, temperature: int) -> int:
         result = await self._set_int_endpoint(
             L1Endpoints.CURVE_MINUS_20_TEMP, temperature
         )
         return result
 
-    async def set_l1_curve_0_temp(self, temperature: int) -> OumanResponse:
+    async def set_l1_curve_0_temp(self, temperature: int) -> int:
         result = await self._set_int_endpoint(L1Endpoints.CURVE_0_TEMP, temperature)
         return result
 
-    async def set_l1_curve_20_temp(self, temperature: int) -> OumanResponse:
+    async def set_l1_curve_20_temp(self, temperature: int) -> int:
         result = await self._set_int_endpoint(L1Endpoints.CURVE_20_TEMP, temperature)
         return result
 
-    async def set_l1_temperature_drop(self, temperature: int) -> OumanResponse:
+    async def set_l1_temperature_drop(self, temperature: int) -> int:
         result = await self._set_int_endpoint(L1Endpoints.TEMPERATURE_DROP, temperature)
         return result
 
-    async def set_l1_big_temperature_drop(self, temperature: int) -> OumanResponse:
+    async def set_l1_big_temperature_drop(self, temperature: int) -> int:
         result = await self._set_int_endpoint(
             L1Endpoints.BIG_TEMPERATURE_DROP, temperature
         )
@@ -287,7 +352,7 @@ class OumanEh800Client:
 
     async def set_l1_water_out_minimum_temperature(
         self, temperature: int
-    ) -> OumanResponse:
+    ) -> int:
         result = await self._set_int_endpoint(
             L1Endpoints.WATER_OUT_MIN_TEMP, temperature
         )
@@ -295,7 +360,7 @@ class OumanEh800Client:
 
     async def set_l1_water_out_maximum_temperature(
         self, temperature: int
-    ) -> OumanResponse:
+    ) -> int:
         result = await self._set_int_endpoint(
             L1Endpoints.WATER_OUT_MAX_TEMP, temperature
         )
@@ -303,7 +368,7 @@ class OumanEh800Client:
 
     async def set_l1_room_temperature_fine_tuning(
         self, temperature: float
-    ) -> OumanResponse:
+    ) -> float:
         result = await self._set_float_endpoint(
             L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING, temperature
         )
@@ -311,7 +376,7 @@ class OumanEh800Client:
 
     async def set_l1_room_temperature_fine_tuning_with_sensor(
         self, temperature: float
-    ) -> OumanResponse:
+    ) -> float:
         result = await self._set_float_endpoint(
             L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING_WITH_SENSOR, temperature
         )
