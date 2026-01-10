@@ -7,27 +7,21 @@ from typing import Iterable, Mapping, NamedTuple, Sequence
 import aiohttp
 from aiohttp import ClientSession
 
-from .const import (
-    ControlEnum,
-    HomeAwayControl,
-    OperationMode,
-)
+from .const import ControlEnum, HomeAwayControl, OperationMode
 from .endpoint import (
     ControllableEndpoint,
     EnumControlOumanEndpoint,
     FloatControlOumanEndpoint,
     IntControlOumanEndpoint,
-    L1Endpoints,
     OumanEndpoint,
-    OumanRegistry,
     OumanValues,
-    SystemEndpoints,
 )
 from .exceptions import (
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
     OumanClientError,
 )
+from .registry import L1Endpoints, OumanRegistry, SystemEndpoints
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -350,25 +344,19 @@ class OumanEh800Client:
         )
         return result
 
-    async def set_l1_water_out_minimum_temperature(
-        self, temperature: int
-    ) -> int:
+    async def set_l1_water_out_minimum_temperature(self, temperature: int) -> int:
         result = await self._set_int_endpoint(
             L1Endpoints.WATER_OUT_MIN_TEMP, temperature
         )
         return result
 
-    async def set_l1_water_out_maximum_temperature(
-        self, temperature: int
-    ) -> int:
+    async def set_l1_water_out_maximum_temperature(self, temperature: int) -> int:
         result = await self._set_int_endpoint(
             L1Endpoints.WATER_OUT_MAX_TEMP, temperature
         )
         return result
 
-    async def set_l1_room_temperature_fine_tuning(
-        self, temperature: float
-    ) -> float:
+    async def set_l1_room_temperature_fine_tuning(self, temperature: float) -> float:
         result = await self._set_float_endpoint(
             L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING, temperature
         )
