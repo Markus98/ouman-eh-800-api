@@ -60,7 +60,7 @@ class SystemEndpoints(OumanRegistry):
         unit=OumanUnit.ENUM,
         sensor_endpoint_id="S_135_85",
         control_endpoint_ids=("S_135_85", "S_222_85"),
-        response_endpoint_ids=("S_222_85"),
+        response_endpoint_ids=("S_222_85",),
         enum_type=HomeAwayControl,
     )
 
@@ -94,8 +94,8 @@ class L1Endpoints(OumanRegistry):
         name="l1_operation_mode",
         unit=OumanUnit.ENUM,
         sensor_endpoint_id="S_59_85",
-        control_endpoint_ids=("S_59_85"),
-        response_endpoint_ids=("S_59_85"),
+        control_endpoint_ids=("S_59_85",),
+        response_endpoint_ids=("S_59_85",),
         enum_type=OperationMode,
     )
 

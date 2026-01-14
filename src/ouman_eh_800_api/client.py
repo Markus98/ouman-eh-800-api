@@ -169,10 +169,11 @@ class OumanEh800Client:
         except OumanClientCommunicationError as err:
             if not isinstance(err.__cause__, aiohttp.ClientResponseError):
                 raise
-            if err.__cause__.status == 404:
-                _LOGGER.debug("404 response from update request, logging in...")
-                await self.login()
-                response = await self._request(request_path, params)
+            if err.__cause__.status != 404:
+                raise
+            _LOGGER.debug("404 response from update request, logging in...")
+            await self.login()
+            response = await self._request(request_path, params)
         return response
 
     async def _set_int_endpoint(
