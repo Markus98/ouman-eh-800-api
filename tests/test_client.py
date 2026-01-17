@@ -896,6 +896,5 @@ async def test_get_alarms_success(client: OumanEh800Client, m: aioresponses):
 
     response = await client.get_alarms()
 
-    assert response.prefix == "alarms"
-    assert "alarm1" in response.values
-    assert response.values["alarm1"] == "test"
+    assert "alarm1" in response
+    assert response["alarm1"] == "test"
