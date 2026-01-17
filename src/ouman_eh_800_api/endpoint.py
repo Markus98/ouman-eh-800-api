@@ -9,7 +9,7 @@ OumanValues = str | float | ControlEnum
 @dataclass(frozen=True)
 class OumanEndpoint:
     name: str
-    unit: OumanUnit
+    unit: OumanUnit | None
     sensor_endpoint_id: str
 
     @staticmethod

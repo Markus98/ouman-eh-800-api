@@ -57,7 +57,7 @@ class SystemEndpoints(OumanRegistry):
 
     HOME_AWAY_MODE = EnumControlOumanEndpoint(
         name="home_away_mode",
-        unit=OumanUnit.ENUM,
+        unit=None,
         sensor_endpoint_id="S_135_85",
         control_endpoint_ids=("S_135_85", "S_222_85"),
         response_endpoint_ids=("S_222_85",),
@@ -72,19 +72,19 @@ class SystemEndpoints(OumanRegistry):
 
     RELAY_CONFIGURATION_TYPE = OumanEndpoint(
         name="relay_configuration_type",
-        unit=OumanUnit.TEXT,
+        unit=None,
         sensor_endpoint_id="S_1002_85",
     )
 
     RELAY_STATUS_TEXT = OumanEndpoint(
         name="relay_status_text",
-        unit=OumanUnit.TEXT,
+        unit=None,
         sensor_endpoint_id="S_1004_85",
     )
 
     L2_INSTALLED_STATUS = OumanEndpoint(
         name="l2_installed_status",
-        unit=OumanUnit.TEXT,
+        unit=None,
         sensor_endpoint_id="S_140_85",
     )
 
@@ -92,7 +92,7 @@ class SystemEndpoints(OumanRegistry):
 class L1Endpoints(OumanRegistry):
     OPERATION_MODE = EnumControlOumanEndpoint(
         name="l1_operation_mode",
-        unit=OumanUnit.ENUM,
+        unit=None,
         sensor_endpoint_id="S_59_85",
         control_endpoint_ids=("S_59_85",),
         response_endpoint_ids=("S_59_85",),
@@ -182,19 +182,19 @@ class L1Endpoints(OumanRegistry):
 
     HEATING_SHUTDOWN_STATUS = OumanEndpoint(
         name="l1_heating_shutdown_status",
-        unit=OumanUnit.TEXT,
+        unit=None,
         sensor_endpoint_id="S_0_0",
     )
 
     TEMPERATURE_LEVEL_STATUS_TEXT = OumanEndpoint(
         name="l1_temperature_level_status_text",
-        unit=OumanUnit.TEXT,
+        unit=None,
         sensor_endpoint_id="S_1000_0",
     )
 
     CIRCUIT_NAME = OumanEndpoint(
         name="l1_circuit_name",
-        unit=OumanUnit.TEXT,
+        unit=None,
         sensor_endpoint_id="S_131_85",
     )
 
@@ -220,7 +220,7 @@ class L1Endpoints(OumanRegistry):
     # values are possible besides "off"
     ROOM_SENSOR_INSTALLED = OumanEndpoint(
         name="l1_room_sensor_installed",
-        unit=OumanUnit.TEXT,
+        unit=None,
         sensor_endpoint_id="S_261_111",
     )
 
@@ -261,7 +261,7 @@ class L1EndpointsWithRoomSensor(L1Endpoints):
 class L2Endpoints(OumanRegistry):
     OPERATION_MODE = EnumControlOumanEndpoint(
         name="l2_operation_mode",
-        unit=OumanUnit.ENUM,
+        unit=None,
         sensor_endpoint_id="S_146_85",
         control_endpoint_ids=("S_146_85",),
         response_endpoint_ids=("S_146_85",),
@@ -351,13 +351,13 @@ class L2Endpoints(OumanRegistry):
 
     TEMPERATURE_LEVEL_STATUS_TEXT = OumanEndpoint(
         name="l2_temperature_level_status_text",
-        unit=OumanUnit.TEXT,
+        unit=None,
         sensor_endpoint_id="S_1001_0",
     )
 
     CIRCUIT_NAME = OumanEndpoint(
         name="l2_circuit_name",
-        unit=OumanUnit.TEXT,
+        unit=None,
         sensor_endpoint_id="S_218_85",
     )
 
@@ -377,7 +377,7 @@ class L2Endpoints(OumanRegistry):
     # values are possible besides "off"
     ROOM_SENSOR_INSTALLED = OumanEndpoint(
         name="l2_room_sensor_installed",
-        unit=OumanUnit.TEXT,
+        unit=None,
         sensor_endpoint_id="S_295_111",
     )
 

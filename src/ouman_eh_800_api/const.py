@@ -23,5 +23,3 @@ class OumanUnit(StrEnum):
     CELSIUS = "°C"
     SECOND = "s"
     PERCENT = "%"
-    TEXT = "TEXT"
-    ENUM = "ENUM"
