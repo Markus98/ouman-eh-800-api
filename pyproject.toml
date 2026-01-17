@@ -3,6 +3,7 @@ name = "ouman-eh-800-api"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
+license = {text = "Apache-2.0"}
 authors = [
     { name = "Markus Tuominen", email = "3738613+Markus98@users.noreply.github.com" }
 ]
