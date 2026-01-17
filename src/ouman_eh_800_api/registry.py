@@ -13,7 +13,7 @@ from .endpoint import (
 
 class OumanRegistry:
     @classmethod
-    def _iterate_endpoints(cls) -> Generator[OumanEndpoint, None, None]:
+    def iterate_endpoints(cls) -> Generator[OumanEndpoint, None, None]:
         """Iterate over all OumanEndpoints in this class and its
         parents. Subclass definitions override parent class
         definitions."""
@@ -29,14 +29,14 @@ class OumanRegistry:
     @lru_cache(maxsize=1)
     def get_sensor_endpoint_ids(cls) -> Sequence[str]:
         """Get all sensor endpoint IDs in this registry"""
-        return [endpoint.sensor_endpoint_id for endpoint in cls._iterate_endpoints()]
+        return [endpoint.sensor_endpoint_id for endpoint in cls.iterate_endpoints()]
 
     @classmethod
     @lru_cache(maxsize=1)
     def _sensor_id_endpoint_map(cls) -> Mapping[str, OumanEndpoint]:
         return {
             endpoint.sensor_endpoint_id: endpoint
-            for endpoint in cls._iterate_endpoints()
+            for endpoint in cls.iterate_endpoints()
         }
 
     @classmethod
@@ -216,12 +216,6 @@ class L1Endpoints(OumanRegistry):
         sensor_endpoint_id="S_275_85",
     )
 
-    ROOM_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
-        name="l1_room_temperature_setpoint",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_278_85",
-    )
-
     # TODO: make this into an enum endpoint when we know what other
     # values are possible besides "off"
     ROOM_SENSOR_INSTALLED = OumanEndpoint(
@@ -243,6 +237,12 @@ class L1EndpointsWithRoomSensor(L1Endpoints):
         name="l1_room_temperature",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_261_85",
+    )
+
+    ROOM_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
+        name="l1_room_temperature_setpoint",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_278_85",
     )
 
     # NOTE: This overrides the one in L1Endpoints since the control
@@ -373,12 +373,6 @@ class L2Endpoints(OumanRegistry):
         sensor_endpoint_id="S_310_85",
     )
 
-    ROOM_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
-        name="l2_room_temperature_setpoint",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_313_85",
-    )
-
     # TODO: make this into an enum endpoint when we know what other
     # values are possible besides "off"
     ROOM_SENSOR_INSTALLED = OumanEndpoint(
@@ -399,6 +393,12 @@ class L2EndpointsWithRoomSensor(L2Endpoints):
         name="l2_room_temperature",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_295_85",
+    )
+
+    ROOM_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
+        name="l2_room_temperature_setpoint",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_313_85",
     )
 
     # NOTE: This overrides the one in L2Endpoints since the control
