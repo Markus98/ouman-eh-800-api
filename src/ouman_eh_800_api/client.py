@@ -27,6 +27,7 @@ from .registry import (
     L2Endpoints,
     L2EndpointsWithRoomSensor,
     OumanRegistry,
+    OumanRegistrySet,
     SystemEndpoints,
 )
 
@@ -420,7 +421,7 @@ class OumanEh800Client:
             L2Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
         )
 
-    async def get_active_registries(self) -> list[type[OumanRegistry]]:
+    async def get_active_registries(self) -> OumanRegistrySet:
         """Get the list of active registries which contain the sets of
         endpoints that can currently be read and written to."""
         registries: list[type[OumanRegistry]] = [SystemEndpoints]
@@ -433,20 +434,11 @@ class OumanEh800Client:
                 registries.append(L2EndpointsWithRoomSensor)
             else:
                 registries.append(L2Endpoints)
-        return registries
+        return OumanRegistrySet(registries)
 
-    async def get_alarms(self):
+    async def get_alarms(self) -> Mapping[str, str]:
         response = await self._request("alarms", [])
-        return response
-
-    async def get_available_settings(self):
-        raise NotImplementedError()
-
-    async def get_available_waterinfo(self):
-        raise NotImplementedError()
-
-    async def get_available_relay(self):
-        raise NotImplementedError()
+        return response.values
 
     async def logout(self) -> None:
         response = await self._request("logout", [])

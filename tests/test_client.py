@@ -12,7 +12,6 @@ from aioresponses import aioresponses
 
 from ouman_eh_800_api.client import OumanEh800Client
 from ouman_eh_800_api.const import HomeAwayControl, OperationMode
-from ouman_eh_800_api.endpoint import OumanEndpoint
 from ouman_eh_800_api.exceptions import (
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
@@ -776,10 +775,10 @@ async def test_get_active_registries_l1_only_no_room_sensor(
 
     result = await client.get_active_registries()
 
-    assert SystemEndpoints in result
-    assert L1Endpoints in result
-    assert L1EndpointsWithRoomSensor not in result
-    assert L2Endpoints not in result
+    assert SystemEndpoints in result.registries
+    assert L1Endpoints in result.registries
+    assert L1EndpointsWithRoomSensor not in result.registries
+    assert L2Endpoints not in result.registries
 
 
 @pytest.mark.asyncio
@@ -804,10 +803,10 @@ async def test_get_active_registries_l1_with_room_sensor(
 
     result = await client.get_active_registries()
 
-    assert SystemEndpoints in result
-    assert L1EndpointsWithRoomSensor in result
-    assert L1Endpoints not in result
-    assert L2Endpoints not in result
+    assert SystemEndpoints in result.registries
+    assert L1EndpointsWithRoomSensor in result.registries
+    assert L1Endpoints not in result.registries
+    assert L2Endpoints not in result.registries
 
 
 @pytest.mark.asyncio
@@ -839,11 +838,11 @@ async def test_get_active_registries_l1_and_l2_no_room_sensors(
 
     result = await client.get_active_registries()
 
-    assert SystemEndpoints in result
-    assert L1Endpoints in result
-    assert L2Endpoints in result
-    assert L1EndpointsWithRoomSensor not in result
-    assert L2EndpointsWithRoomSensor not in result
+    assert SystemEndpoints in result.registries
+    assert L1Endpoints in result.registries
+    assert L2Endpoints in result.registries
+    assert L1EndpointsWithRoomSensor not in result.registries
+    assert L2EndpointsWithRoomSensor not in result.registries
 
 
 @pytest.mark.asyncio
@@ -875,11 +874,11 @@ async def test_get_active_registries_all_with_room_sensors(
 
     result = await client.get_active_registries()
 
-    assert SystemEndpoints in result
-    assert L1EndpointsWithRoomSensor in result
-    assert L2EndpointsWithRoomSensor in result
-    assert L1Endpoints not in result
-    assert L2Endpoints not in result
+    assert SystemEndpoints in result.registries
+    assert L1EndpointsWithRoomSensor in result.registries
+    assert L2EndpointsWithRoomSensor in result.registries
+    assert L1Endpoints not in result.registries
+    assert L2Endpoints not in result.registries
 
 
 # =============================================================================

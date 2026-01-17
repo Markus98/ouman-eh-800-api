@@ -12,8 +12,7 @@ class OumanEndpoint:
     unit: OumanUnit | None
     sensor_endpoint_id: str
 
-    @staticmethod
-    def parse_value(value: str) -> OumanValues:
+    def parse_value(self, value: str) -> OumanValues:
         return value
 
 
@@ -24,8 +23,7 @@ class ControllableEndpoint:
 
 
 class NumberOumanEndpoint(OumanEndpoint):
-    @staticmethod
-    def parse_value(value: str) -> float:
+    def parse_value(self, value: str) -> float:
         return float(value)
 
 

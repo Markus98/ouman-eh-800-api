@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from functools import lru_cache
 from typing import Generator, Mapping, Sequence
 
@@ -43,6 +44,21 @@ class OumanRegistry:
     def get_endpoint_by_sensor_id(cls, sensor_endpoint_id: str) -> OumanEndpoint | None:
         """Get an endpoint based on it's sensor_endpoint_id"""
         return cls._sensor_id_endpoint_map().get(sensor_endpoint_id)
+
+
+@dataclass
+class OumanRegistrySet:
+    """A set of registries containing endpoints"""
+
+    registries: Sequence[type[OumanRegistry]]
+
+    def get_endpoints(self) -> list[OumanEndpoint]:
+        """All the endpoints in the registry set"""
+        return [
+            endpoint
+            for registry in self.registries
+            for endpoint in registry.iterate_endpoints()
+        ]
 
 
 class SystemEndpoints(OumanRegistry):
