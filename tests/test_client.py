@@ -22,6 +22,7 @@ from ouman_eh_800_api.registry import (
     L1EndpointsWithRoomSensor,
     L2Endpoints,
     L2EndpointsWithRoomSensor,
+    OumanRegistrySet,
     SystemEndpoints,
 )
 
@@ -600,17 +601,15 @@ async def test_set_endpoint_value_enum_with_wrong_type_raises(client: OumanEh800
 
 
 # =============================================================================
-# Tests for get_registry_values
+# Tests for get_values
 # =============================================================================
 
 
 @pytest.mark.asyncio
-async def test_get_registry_values_single_registry(
-    client: OumanEh800Client, m: aioresponses
-):
+async def test_get_values_single_registry(client: OumanEh800Client, m: aioresponses):
     # Build the endpoint IDs that will be requested
-    endpoint_ids = SystemEndpoints.get_sensor_endpoint_ids()
-    params = "%253B".join(endpoint_ids)
+    registry_set = OumanRegistrySet([SystemEndpoints])
+    params = "%253B".join(registry_set.sensor_endpoint_ids)
 
     m.get(
         f"{MOCK_ADDRESS}/request?{params}%253B{MOCK_DATE_PARAM}",
@@ -618,7 +617,7 @@ async def test_get_registry_values_single_registry(
         status=200,
     )
 
-    result = await client.get_registry_values([SystemEndpoints])
+    result = await client.get_values(registry_set)
 
     assert SystemEndpoints.OUTSIDE_TEMPERATURE in result
     assert result[SystemEndpoints.OUTSIDE_TEMPERATURE] == -13.3
@@ -627,11 +626,11 @@ async def test_get_registry_values_single_registry(
 
 
 @pytest.mark.asyncio
-async def test_get_registry_values_unknown_endpoint_logs_warning(
+async def test_get_values_unknown_endpoint_logs_warning(
     client: OumanEh800Client, m: aioresponses, caplog
 ):
-    endpoint_ids = SystemEndpoints.get_sensor_endpoint_ids()
-    params = "%253B".join(endpoint_ids)
+    registry_set = OumanRegistrySet([SystemEndpoints])
+    params = "%253B".join(registry_set.sensor_endpoint_ids)
 
     # Response includes an unknown endpoint
     m.get(
@@ -640,9 +639,9 @@ async def test_get_registry_values_unknown_endpoint_logs_warning(
         status=200,
     )
 
-    await client.get_registry_values([SystemEndpoints])
+    await client.get_values(registry_set)
 
-    assert "Unknown endpoint ID" in caplog.text
+    assert "Unexpected endpoint ID" in caplog.text
     assert "UNKNOWN_ID" in caplog.text
 
 

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cached_property
 from typing import Generator, Mapping, Sequence
 
 from .const import HomeAwayControl, OperationMode, OumanUnit
@@ -26,25 +26,6 @@ class OumanRegistry:
                     seen_keys.add(key)
                     yield value
 
-    @classmethod
-    @lru_cache(maxsize=1)
-    def get_sensor_endpoint_ids(cls) -> Sequence[str]:
-        """Get all sensor endpoint IDs in this registry"""
-        return [endpoint.sensor_endpoint_id for endpoint in cls.iterate_endpoints()]
-
-    @classmethod
-    @lru_cache(maxsize=1)
-    def _sensor_id_endpoint_map(cls) -> Mapping[str, OumanEndpoint]:
-        return {
-            endpoint.sensor_endpoint_id: endpoint
-            for endpoint in cls.iterate_endpoints()
-        }
-
-    @classmethod
-    def get_endpoint_by_sensor_id(cls, sensor_endpoint_id: str) -> OumanEndpoint | None:
-        """Get an endpoint based on it's sensor_endpoint_id"""
-        return cls._sensor_id_endpoint_map().get(sensor_endpoint_id)
-
 
 @dataclass
 class OumanRegistrySet:
@@ -52,13 +33,32 @@ class OumanRegistrySet:
 
     registries: Sequence[type[OumanRegistry]]
 
-    def get_endpoints(self) -> list[OumanEndpoint]:
+    def __post_init__(self) -> None:
+        if len(self.registries) > len(set(self.registries)):
+            raise ValueError("Multiple of the same registry passed")
+
+        if len(self.endpoints) > len(self._sensor_id_endpoint_map):
+            raise ValueError("Conflicting endpoint IDs across registries")
+
+    @cached_property
+    def endpoints(self) -> Sequence[OumanEndpoint]:
         """All the endpoints in the registry set"""
         return [
             endpoint
             for registry in self.registries
             for endpoint in registry.iterate_endpoints()
         ]
+
+    @cached_property
+    def _sensor_id_endpoint_map(self) -> Mapping[str, OumanEndpoint]:
+        return {endpoint.sensor_endpoint_id: endpoint for endpoint in self.endpoints}
+
+    @cached_property
+    def sensor_endpoint_ids(self) -> Sequence[str]:
+        return [endpoint.sensor_endpoint_id for endpoint in self.endpoints]
+
+    def get_endpoint_by_sensor_id(self, id: str) -> OumanEndpoint | None:
+        return self._sensor_id_endpoint_map.get(id)
 
 
 class SystemEndpoints(OumanRegistry):

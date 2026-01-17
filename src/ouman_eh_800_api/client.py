@@ -137,29 +137,24 @@ class OumanEh800Client:
                 )
         return response
 
-    async def get_registry_values(
-        self, registries: Sequence[type[OumanRegistry]]
+    async def get_values(
+        self, registry_set: OumanRegistrySet
     ) -> dict[OumanEndpoint, OumanValues]:
-        """Get all values from the specified endpoint registries"""
-        endpoint_ids = [
-            endpoint_id
-            for registry in registries
-            for endpoint_id in registry.get_sensor_endpoint_ids()
-        ]
-        response = await self._get_values(endpoint_ids)
+        """Get all endpoint values for the specified registry set.
 
-        def get_endpoint_from_id(id: str) -> OumanEndpoint | None:
-            for registry in registries:
-                endpoint = registry.get_endpoint_by_sensor_id(id)
-                if endpoint:
-                    return endpoint
-            return None
+        Args:
+            registry_set: The registry set containing endpoints to query.
+
+        Returns:
+            A dictionary mapping endpoints to their current values.
+        """
+        response = await self._get_values(registry_set.sensor_endpoint_ids)
 
         result = {}
         for key, value in response.values.items():
-            endpoint = get_endpoint_from_id(key)
+            endpoint = registry_set.get_endpoint_by_sensor_id(key)
             if not endpoint:
-                _LOGGER.warning(f"Unknown endpoint ID in response: '{key}'")
+                _LOGGER.warning(f"Unexpected endpoint ID in response: '{key}'")
                 continue
             parsed_value = endpoint.parse_value(value)
             result[endpoint] = parsed_value
@@ -359,7 +354,7 @@ class OumanEh800Client:
         Returns:
             A dictionary mapping endpoints to their current values.
         """
-        result = await self.get_registry_values([SystemEndpoints])
+        result = await self.get_values(OumanRegistrySet([SystemEndpoints]))
         return result
 
     async def set_l1_operation_mode(self, value: OperationMode) -> OperationMode:
@@ -524,7 +519,7 @@ class OumanEh800Client:
         Returns:
             A dictionary mapping endpoints to their current values.
         """
-        result = await self.get_registry_values([L1Endpoints])
+        result = await self.get_values(OumanRegistrySet([L1Endpoints]))
         return result
 
     async def set_l2_operation_mode(self, value: OperationMode) -> OperationMode:
@@ -689,7 +684,7 @@ class OumanEh800Client:
         Returns:
             A dictionary mapping endpoints to their current values.
         """
-        result = await self.get_registry_values([L2Endpoints])
+        result = await self.get_values(OumanRegistrySet([L2Endpoints]))
         return result
 
     async def get_is_l2_installed(self) -> bool:
