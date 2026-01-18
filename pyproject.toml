@@ -1,16 +1,31 @@
 [project]
 name = "ouman-eh-800-api"
 version = "0.1.0"
-description = "Add your description here"
+description = "Async client for communicating with the Ouman EH-800 heating controller"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 authors = [
     { name = "Markus Tuominen", email = "3738613+Markus98@users.noreply.github.com" }
 ]
 requires-python = ">=3.13"
-dependencies = [
-    "aiohttp>=3.13.3",
+keywords = ["ouman", "eh-800", "heating", "home-assistant", "async"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Framework :: AsyncIO",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Topic :: Home Automation",
 ]
+dependencies = [
+    "aiohttp>=3.9,<4",
+]
+
+[project.urls]
+Homepage = "https://github.com/Markus98/ouman-eh-800-api"
+Repository = "https://github.com/Markus98/ouman-eh-800-api"
+Issues = "https://github.com/Markus98/ouman-eh-800-api/issues"
 
 [build-system]
 requires = ["uv_build>=0.9.21,<0.10.0"]
