@@ -13,11 +13,18 @@ from .endpoint import (
 
 
 class OumanRegistry:
+    """Base class for endpoint registry definitions.
+
+    Subclasses define endpoints as class attributes. Child registries
+    can override parent endpoints by redefining them with the same name.
+    """
+
     @classmethod
     def iterate_endpoints(cls) -> Generator[OumanEndpoint, None, None]:
-        """Iterate over all OumanEndpoints in this class and its
-        parents. Subclass definitions override parent class
-        definitions."""
+        """Iterate over all OumanEndpoints in this class and its parents.
+
+        Subclass definitions override parent class definitions.
+        """
         seen_keys = set()
         for base in cls.mro():
             for key, value in base.__dict__.items():
@@ -29,7 +36,11 @@ class OumanRegistry:
 
 @dataclass
 class OumanRegistrySet:
-    """A set of registries containing endpoints"""
+    """A collection of registries for querying endpoint values.
+
+    Use this to group registries when calling client.get_values().
+    Validates that registries don't have conflicting endpoint IDs.
+    """
 
     registries: Sequence[type[OumanRegistry]]
 
@@ -42,7 +53,7 @@ class OumanRegistrySet:
 
     @cached_property
     def endpoints(self) -> Sequence[OumanEndpoint]:
-        """All the endpoints in the registry set"""
+        """All the endpoints in the registry set."""
         return [
             endpoint
             for registry in self.registries
@@ -62,6 +73,8 @@ class OumanRegistrySet:
 
 
 class SystemEndpoints(OumanRegistry):
+    """System-wide endpoints for the Ouman EH-800 device."""
+
     TREND_SAMPLE_INTERVAL = IntControlOumanEndpoint(
         name="trend_sampling_interval",
         unit=OumanUnit.SECOND,
@@ -106,6 +119,8 @@ class SystemEndpoints(OumanRegistry):
 
 
 class L1Endpoints(OumanRegistry):
+    """Endpoints for the L1 (primary) heating circuit."""
+
     OPERATION_MODE = EnumControlOumanEndpoint(
         name="l1_operation_mode",
         unit=None,
@@ -241,8 +256,15 @@ class L1Endpoints(OumanRegistry):
     )
 
 
-# NOTE: Functionality not verified.
 class L1EndpointsWithRoomSensor(L1Endpoints):
+    """Endpoints for L1 heating circuit with a room sensor installed.
+
+    Note: The endpoints in this registry have not been verified.
+
+    Extends L1Endpoints with additional room sensor endpoints and
+    overrides ROOM_TEMPERATURE_FINE_TUNING with the correct control endpoint.
+    """
+
     ROOM_SENSOR_POTENTIOMETER = NumberOumanEndpoint(
         name="l1_room_sensor_potentiometer",
         unit=OumanUnit.CELSIUS,
@@ -273,8 +295,12 @@ class L1EndpointsWithRoomSensor(L1Endpoints):
     )
 
 
-# NOTE: L2 functionality not verified
 class L2Endpoints(OumanRegistry):
+    """Endpoints for the L2 (secondary) heating circuit.
+
+    Note: The endpoints in this registry have not been verified.
+    """
+
     OPERATION_MODE = EnumControlOumanEndpoint(
         name="l2_operation_mode",
         unit=None,
@@ -399,6 +425,14 @@ class L2Endpoints(OumanRegistry):
 
 
 class L2EndpointsWithRoomSensor(L2Endpoints):
+    """Endpoints for L2 heating circuit with a room sensor installed.
+
+    Note: The endpoints in this registry have not been verified.
+
+    Extends L2Endpoints with additional room sensor endpoints and
+    overrides ROOM_TEMPERATURE_FINE_TUNING with the correct control endpoint.
+    """
+
     ROOM_SENSOR_POTENTIOMETER = NumberOumanEndpoint(
         name="l2_room_sensor_potentiometer",
         unit=OumanUnit.CELSIUS,

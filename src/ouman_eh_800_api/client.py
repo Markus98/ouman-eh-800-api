@@ -40,6 +40,15 @@ class _OumanResponse(NamedTuple):
 
 
 class OumanEh800Client:
+    """Client for communicating with an Ouman EH-800 heating controller.
+
+    Args:
+        session: An aiohttp ClientSession for making HTTP requests.
+        address: The base URL of the device (e.g., "http://192.168.1.100").
+        username: Username for authentication.
+        password: Password for authentication.
+    """
+
     def __init__(
         self, session: ClientSession, address: str, username: str, password: str
     ):
