@@ -1,6 +1,6 @@
+from collections.abc import Generator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Generator, Mapping, Sequence
 
 from .const import HomeAwayControl, OperationMode, OumanUnit
 from .endpoint import (
@@ -20,7 +20,7 @@ class OumanRegistry:
     """
 
     @classmethod
-    def iterate_endpoints(cls) -> Generator[OumanEndpoint, None, None]:
+    def iterate_endpoints(cls) -> Generator[OumanEndpoint]:
         """Iterate over all OumanEndpoints in this class and its parents.
 
         Subclass definitions override parent class definitions.

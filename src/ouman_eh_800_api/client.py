@@ -1,8 +1,9 @@
 import asyncio
 import logging
-from datetime import datetime, timezone
+from collections.abc import Iterable, Mapping, Sequence
+from datetime import UTC, datetime
 from email.utils import formatdate
-from typing import Iterable, Mapping, NamedTuple, Sequence
+from typing import NamedTuple
 
 import aiohttp
 from aiohttp import ClientSession
@@ -84,10 +85,11 @@ class OumanEh800Client:
     def _construct_request_url(self, path: str, params: Iterable[str]) -> str:
         request_url = f"{self._address}/{path}"
         # Append gmt string and equals symbol to match what the web UI does.
-        # The requests work without this param as well, except when there are no other params.
+        # The requests work without this param as well, except when there are
+        # no other params.
         gmt_string_param = (
             formatdate(
-                timeval=datetime.now(timezone.utc).timestamp(),
+                timeval=datetime.now(UTC).timestamp(),
                 localtime=False,
                 usegmt=True,
             )
@@ -110,7 +112,7 @@ class OumanEh800Client:
 
                     parsed_response = self._parse_api_response(response_text)
                     return parsed_response
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             raise OumanClientCommunicationError("Timeout connecting to device") from err
         except aiohttp.ClientResponseError as err:
             raise OumanClientCommunicationError(f"HTTP Error: {err.status}") from err
@@ -192,7 +194,8 @@ class OumanEh800Client:
     ) -> int:
         if not (endpoint.min_val <= value <= endpoint.max_val):
             raise ValueError(
-                f"Value for {endpoint.name} out of bounds [{endpoint.min_val},{endpoint.max_val}]: {value}"
+                f"Value for {endpoint.name} out of bounds "
+                f"[{endpoint.min_val},{endpoint.max_val}]: {value}"
             )
         params = {endpoint.control_endpoint_id: str(value)}
         result = await self._update_values(params)
@@ -211,7 +214,8 @@ class OumanEh800Client:
 
         if float_result != value:
             raise OumanClientError(
-                f"Returned float does not match set int value. Got {result_value}, expected {value}"
+                "Returned float does not match set int value. "
+                f"Got {result_value}, expected {value}"
             )
 
         return int(float_result)
@@ -224,7 +228,8 @@ class OumanEh800Client:
         decimal."""
         if not (endpoint.min_val <= value <= endpoint.max_val):
             raise ValueError(
-                f"Value for {endpoint.name} out of bounds [{endpoint.min_val},{endpoint.max_val}]: {value}"
+                f"Value for {endpoint.name} out of bounds "
+                f"[{endpoint.min_val},{endpoint.max_val}]: {value}"
             )
         rounded_value = round(value, 1)
         params = {endpoint.control_endpoint_id: str(round(value, 1))}
@@ -244,7 +249,8 @@ class OumanEh800Client:
 
         if float_result != rounded_value:
             raise OumanClientError(
-                f"Returned float does not match set value. Got {result_value}, expected {value}"
+                "Returned float does not match set value. "
+                f"Got {result_value}, expected {value}"
             )
 
         return float_result
@@ -254,7 +260,8 @@ class OumanEh800Client:
     ) -> ControlEnum:
         if not isinstance(value, endpoint.enum_type):
             raise TypeError(
-                f"Unexpected type for {endpoint.name} value. Expected {endpoint.enum_type}, got {value}."
+                f"Unexpected type for {endpoint.name} value. "
+                f"Expected {endpoint.enum_type}, got {value}."
             )
         params = {endpoint_id: value for endpoint_id in endpoint.control_endpoint_ids}
         result = await self._update_values(params)
@@ -267,7 +274,8 @@ class OumanEh800Client:
 
         if result_value != value:
             raise OumanClientError(
-                f"Returned value does not match str enum value. Got '{result_value}', expected '{value}'"
+                "Returned value does not match str enum value. "
+                f"Got '{result_value}', expected '{value}'"
             )
         try:
             enum_result = endpoint.parse_value(result_value)
@@ -300,9 +308,10 @@ class OumanEh800Client:
 
         result: OumanValues
         if isinstance(endpoint, IntControlOumanEndpoint):
-            if not isinstance(value, (int, float)):
+            if not isinstance(value, int | float):
                 raise TypeError(
-                    f"Value for {endpoint.name} must be numeric, got {type(value).__name__}"
+                    f"Value for {endpoint.name} must be numeric, "
+                    f"got {type(value).__name__}"
                 )
             if not value.is_integer():
                 raise ValueError(
@@ -310,9 +319,10 @@ class OumanEh800Client:
                 )
             result = await self._set_int_endpoint(endpoint, int(value))
         elif isinstance(endpoint, FloatControlOumanEndpoint):
-            if not isinstance(value, (int, float)):
+            if not isinstance(value, int | float):
                 raise TypeError(
-                    f"Value for {endpoint.name} must be numeric, got {type(value).__name__}"
+                    f"Value for {endpoint.name} must be numeric, "
+                    f"got {type(value).__name__}"
                 )
             result = await self._set_float_endpoint(endpoint, value)
         elif isinstance(endpoint, EnumControlOumanEndpoint):
@@ -448,7 +458,8 @@ class OumanEh800Client:
         return result
 
     async def set_l1_big_temperature_drop(self, temperature: int) -> int:
-        """Set the supply water setpoint for "big temperature drop" operation mode on L1.
+        """Set the supply water setpoint for "big temperature drop" operation
+        mode on L1.
 
         This is the target supply water temperature used when the L1 heating
         circuit is set to "big temperature drop" operation mode.
@@ -613,7 +624,8 @@ class OumanEh800Client:
         return result
 
     async def set_l2_big_temperature_drop(self, temperature: int) -> int:
-        """Set the supply water setpoint for "big temperature drop" operation mode on L2.
+        """Set the supply water setpoint for "big temperature drop" operation
+        mode on L2.
 
         This is the target supply water temperature used when the L2 heating
         circuit is set to "big temperature drop" operation mode.
