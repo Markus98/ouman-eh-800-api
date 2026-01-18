@@ -1,8 +1,8 @@
 import asyncio
 import re
-from datetime import datetime, timezone
-from typing import AsyncGenerator
-from unittest.mock import MagicMock
+from collections.abc import AsyncGenerator
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
@@ -40,7 +40,7 @@ MOCK_LOGOUT_URL = f"{MOCK_ADDRESS}/logout?{MOCK_DATE_PARAM}"
 
 @pytest.fixture(autouse=True)
 def mock_datetime_now_for_client(monkeypatch):
-    fake_now = datetime(2026, 1, 6, 12, 0, 0, tzinfo=timezone.utc)
+    fake_now = datetime(2026, 1, 6, 12, 0, 0, tzinfo=UTC)
     mock_dt = MagicMock(wraps=datetime)
     mock_dt.now.return_value = fake_now
 
@@ -59,14 +59,14 @@ async def client(session: ClientSession) -> OumanEh800Client:
 
 
 @pytest_asyncio.fixture
-async def session() -> AsyncGenerator[ClientSession, None]:
+async def session() -> AsyncGenerator[ClientSession]:
     """Fixture for aiohttp session."""
     async with ClientSession() as sess:
         yield sess
 
 
 @pytest_asyncio.fixture
-async def m() -> AsyncGenerator[aioresponses, None]:
+async def m() -> AsyncGenerator[aioresponses]:
     """Fixture for aioresponses for mocking aiohttp requests."""
     with aioresponses() as mock:
         yield mock
@@ -563,7 +563,7 @@ async def test_set_endpoint_value_non_controllable_raises(client: OumanEh800Clie
     endpoint = SystemEndpoints.OUTSIDE_TEMPERATURE  # Not controllable
 
     with pytest.raises(TypeError) as exc_info:
-        await client.set_endpoint_value(endpoint, 20.0)
+        await client.set_endpoint_value(endpoint, 20.0)  # type: ignore[arg-type]
 
     assert "not a controllable endpoint" in str(exc_info.value)
 
@@ -897,3 +897,180 @@ async def test_get_alarms_success(client: OumanEh800Client, m: aioresponses):
 
     assert "alarm1" in response
     assert response["alarm1"] == "test"
+
+
+# =============================================================================
+# Tests for convenience methods (parametrized)
+# =============================================================================
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "method_name,endpoint,test_value",
+    [
+        ("set_trend_sample_interval", SystemEndpoints.TREND_SAMPLE_INTERVAL, 600),
+        ("set_l1_valve_position_setpoint", L1Endpoints.VALVE_POSITION_SETPOINT, 50),
+        ("set_l1_curve_minus_20_temp", L1Endpoints.CURVE_MINUS_20_TEMP, 70),
+        ("set_l1_curve_0_temp", L1Endpoints.CURVE_0_TEMP, 50),
+        ("set_l1_curve_20_temp", L1Endpoints.CURVE_20_TEMP, 30),
+        ("set_l1_temperature_drop", L1Endpoints.TEMPERATURE_DROP, 40),
+        ("set_l1_big_temperature_drop", L1Endpoints.BIG_TEMPERATURE_DROP, 30),
+        ("set_l1_water_out_minimum_temperature", L1Endpoints.WATER_OUT_MIN_TEMP, 20),
+        ("set_l1_water_out_maximum_temperature", L1Endpoints.WATER_OUT_MAX_TEMP, 60),
+        ("set_l2_valve_position_setpoint", L2Endpoints.VALVE_POSITION_SETPOINT, 50),
+        ("set_l2_curve_minus_20_temp", L2Endpoints.CURVE_MINUS_20_TEMP, 70),
+        ("set_l2_curve_0_temp", L2Endpoints.CURVE_0_TEMP, 50),
+        ("set_l2_curve_20_temp", L2Endpoints.CURVE_20_TEMP, 30),
+        ("set_l2_temperature_drop", L2Endpoints.TEMPERATURE_DROP, 40),
+        ("set_l2_big_temperature_drop", L2Endpoints.BIG_TEMPERATURE_DROP, 30),
+        ("set_l2_water_out_minimum_temperature", L2Endpoints.WATER_OUT_MIN_TEMP, 20),
+        ("set_l2_water_out_maximum_temperature", L2Endpoints.WATER_OUT_MAX_TEMP, 60),
+    ],
+)
+async def test_int_convenience_methods(
+    client: OumanEh800Client, method_name: str, endpoint: object, test_value: int
+):
+    with patch.object(
+        client, "_set_int_endpoint", new_callable=AsyncMock
+    ) as mock_set_int:
+        mock_set_int.return_value = test_value
+        method = getattr(client, method_name)
+        result = await method(test_value)
+
+        mock_set_int.assert_called_once_with(endpoint, test_value)
+        assert result == test_value
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "method_name,endpoint,test_value",
+    [
+        (
+            "set_l1_room_temperature_fine_tuning",
+            L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING,
+            1.5,
+        ),
+        (
+            "set_l1_room_temperature_fine_tuning_with_sensor",
+            L1EndpointsWithRoomSensor.ROOM_TEMPERATURE_FINE_TUNING,
+            -2.0,
+        ),
+        (
+            "set_l2_room_temperature_fine_tuning",
+            L2Endpoints.ROOM_TEMPERATURE_FINE_TUNING,
+            1.5,
+        ),
+        (
+            "set_l2_room_temperature_fine_tuning_with_sensor",
+            L2EndpointsWithRoomSensor.ROOM_TEMPERATURE_FINE_TUNING,
+            -2.0,
+        ),
+    ],
+)
+async def test_float_convenience_methods(
+    client: OumanEh800Client, method_name: str, endpoint: object, test_value: float
+):
+    with patch.object(
+        client, "_set_float_endpoint", new_callable=AsyncMock
+    ) as mock_set_float:
+        mock_set_float.return_value = test_value
+        method = getattr(client, method_name)
+        result = await method(test_value)
+
+        mock_set_float.assert_called_once_with(endpoint, test_value)
+        assert result == test_value
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "method_name,endpoint,test_value,enum_type",
+    [
+        (
+            "set_home_away",
+            SystemEndpoints.HOME_AWAY_MODE,
+            HomeAwayControl.AWAY,
+            HomeAwayControl,
+        ),
+        (
+            "set_l1_operation_mode",
+            L1Endpoints.OPERATION_MODE,
+            OperationMode.AUTOMATIC,
+            OperationMode,
+        ),
+        (
+            "set_l2_operation_mode",
+            L2Endpoints.OPERATION_MODE,
+            OperationMode.AUTOMATIC,
+            OperationMode,
+        ),
+    ],
+)
+async def test_enum_convenience_methods(
+    client: OumanEh800Client,
+    method_name: str,
+    endpoint: object,
+    test_value: object,
+    enum_type: type,
+):
+    with patch.object(
+        client, "_set_enum_endpoint", new_callable=AsyncMock
+    ) as mock_set_enum:
+        mock_set_enum.return_value = test_value
+        method = getattr(client, method_name)
+        result = await method(test_value)
+
+        mock_set_enum.assert_called_once_with(endpoint, test_value)
+        assert result == test_value
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "method_name,test_value,expected_type",
+    [
+        ("set_home_away", HomeAwayControl.AWAY, HomeAwayControl),
+        ("set_l1_operation_mode", OperationMode.AUTOMATIC, OperationMode),
+        ("set_l2_operation_mode", OperationMode.AUTOMATIC, OperationMode),
+    ],
+)
+async def test_enum_convenience_methods_wrong_return_type_raises(
+    client: OumanEh800Client,
+    method_name: str,
+    test_value: object,
+    expected_type: type,
+):
+    with patch.object(
+        client, "_set_enum_endpoint", new_callable=AsyncMock
+    ) as mock_set_enum:
+        # Return wrong type
+        mock_set_enum.return_value = "wrong_type"
+        method = getattr(client, method_name)
+
+        with pytest.raises(TypeError) as exc_info:
+            await method(test_value)
+
+        assert "Unexpected return type" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "method_name,registry_class",
+    [
+        ("get_system_values", SystemEndpoints),
+        ("get_l1_values", L1Endpoints),
+        ("get_l2_values", L2Endpoints),
+    ],
+)
+async def test_get_values_convenience_methods(
+    client: OumanEh800Client, method_name: str, registry_class: type
+):
+    mock_result = {MagicMock(): 123.0}
+    with patch.object(client, "get_values", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_result
+        method = getattr(client, method_name)
+        result = await method()
+
+        assert mock_get.called
+        call_args = mock_get.call_args[0][0]
+        assert isinstance(call_args, OumanRegistrySet)
+        assert registry_class in call_args.registries
+        assert result == mock_result

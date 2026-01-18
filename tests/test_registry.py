@@ -12,7 +12,6 @@ from ouman_eh_800_api.registry import (
     SystemEndpoints,
 )
 
-
 # =============================================================================
 # Test fixtures - custom registries for testing validation
 # =============================================================================
