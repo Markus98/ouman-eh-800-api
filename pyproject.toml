@@ -1,6 +1,6 @@
 [project]
 name = "ouman-eh-800-api"
-version = "0.1.0"
+version = "0.2.0"
 description = "Async client for communicating with the Ouman EH-800 heating controller"
 readme = "README.md"
 license = {text = "Apache-2.0"}
