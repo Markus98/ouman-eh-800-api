@@ -1,10 +1,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from .const import ControlEnum, OumanUnit
-
-OumanValues = str | float | ControlEnum
-"""Type alias for possible endpoint values: string, float, or a control enum."""
+from .const import ControlEnum, OumanUnit, OumanValues
 
 
 @dataclass(frozen=True)

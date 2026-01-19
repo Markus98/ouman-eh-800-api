@@ -1,5 +1,5 @@
 from .client import OumanEh800Client
-from .const import HomeAwayControl, OperationMode, OumanUnit
+from .const import ControlEnum, HomeAwayControl, OperationMode, OumanUnit, OumanValues
 from .endpoint import (
     ControllableEndpoint,
     EnumControlOumanEndpoint,
@@ -7,7 +7,6 @@ from .endpoint import (
     IntControlOumanEndpoint,
     NumberOumanEndpoint,
     OumanEndpoint,
-    OumanValues,
 )
 from .exceptions import (
     OumanClientAuthenticationError,
@@ -28,6 +27,7 @@ __all__ = [
     # Client
     "OumanEh800Client",
     # Enums
+    "ControlEnum",
     "HomeAwayControl",
     "OperationMode",
     "OumanUnit",

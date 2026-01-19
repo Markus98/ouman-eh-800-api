@@ -8,14 +8,13 @@ from typing import NamedTuple
 import aiohttp
 from aiohttp import ClientSession
 
-from .const import ControlEnum, HomeAwayControl, OperationMode
+from .const import ControlEnum, HomeAwayControl, OperationMode, OumanValues
 from .endpoint import (
     ControllableEndpoint,
     EnumControlOumanEndpoint,
     FloatControlOumanEndpoint,
     IntControlOumanEndpoint,
     OumanEndpoint,
-    OumanValues,
 )
 from .exceptions import (
     OumanClientAuthenticationError,

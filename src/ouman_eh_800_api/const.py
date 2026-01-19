@@ -21,6 +21,10 @@ class OperationMode(StrEnum):
 
 
 ControlEnum = HomeAwayControl | OperationMode
+"""Type alias which contains all of the possible enums used for control operations"""
+
+OumanValues = str | float | ControlEnum
+"""Type alias for possible endpoint values: string, float, or a control enum."""
 
 
 class OumanUnit(StrEnum):
