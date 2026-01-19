@@ -240,7 +240,9 @@ def test_iterate_endpoints_real_l1_with_room_sensor_override():
     assert endpoint_names.count("l1_room_temperature_fine_tuning") == 1
 
     # The endpoint should be the child's version with S_102_85
-    fine_tuning = next(e for e in endpoints if e.name == "l1_room_temperature_fine_tuning")
+    fine_tuning = next(
+        e for e in endpoints if e.name == "l1_room_temperature_fine_tuning"
+    )
     assert fine_tuning.sensor_endpoint_id == "S_102_85"
     assert fine_tuning == L1EndpointsWithRoomSensor.ROOM_TEMPERATURE_FINE_TUNING
     assert fine_tuning != L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING
