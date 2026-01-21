@@ -190,7 +190,7 @@ class OumanEh800Client:
 
     async def _set_int_endpoint(
         self, endpoint: IntControlOumanEndpoint, value: int
-    ) -> int:
+    ) -> float:
         if not (endpoint.min_val <= value <= endpoint.max_val):
             raise ValueError(
                 f"Value for {endpoint.name} out of bounds "
@@ -217,7 +217,7 @@ class OumanEh800Client:
                 f"Got {result_value}, expected {value}"
             )
 
-        return int(float_result)
+        return float_result
 
     async def _set_float_endpoint(
         self, endpoint: FloatControlOumanEndpoint, value: float
@@ -352,7 +352,7 @@ class OumanEh800Client:
             raise TypeError(f"Unexpected return type: {type(result).__name__}")
         return result
 
-    async def set_trend_sample_interval(self, value: int) -> int:
+    async def set_trend_sample_interval(self, value: int) -> float:
         """Set the trend sampling interval.
 
         Args:
@@ -389,7 +389,7 @@ class OumanEh800Client:
             raise TypeError(f"Unexpected return type: {type(result).__name__}")
         return result
 
-    async def set_l1_valve_position_setpoint(self, position: int) -> int:
+    async def set_l1_valve_position_setpoint(self, position: int) -> float:
         """Set the valve position setpoint for L1 heating circuit.
 
         Args:
@@ -403,7 +403,7 @@ class OumanEh800Client:
         )
         return result
 
-    async def set_l1_curve_minus_20_temp(self, temperature: int) -> int:
+    async def set_l1_curve_minus_20_temp(self, temperature: int) -> float:
         """Set the heating curve temperature at -20°C outdoor temp for L1.
 
         Args:
@@ -417,7 +417,7 @@ class OumanEh800Client:
         )
         return result
 
-    async def set_l1_curve_0_temp(self, temperature: int) -> int:
+    async def set_l1_curve_0_temp(self, temperature: int) -> float:
         """Set the heating curve temperature at 0°C outdoor temp for L1.
 
         Args:
@@ -429,7 +429,7 @@ class OumanEh800Client:
         result = await self._set_int_endpoint(L1Endpoints.CURVE_0_TEMP, temperature)
         return result
 
-    async def set_l1_curve_20_temp(self, temperature: int) -> int:
+    async def set_l1_curve_20_temp(self, temperature: int) -> float:
         """Set the heating curve temperature at +20°C outdoor temp for L1.
 
         Args:
@@ -441,7 +441,7 @@ class OumanEh800Client:
         result = await self._set_int_endpoint(L1Endpoints.CURVE_20_TEMP, temperature)
         return result
 
-    async def set_l1_temperature_drop(self, temperature: int) -> int:
+    async def set_l1_temperature_drop(self, temperature: int) -> float:
         """Set the supply water setpoint for "temperature drop" operation mode on L1.
 
         This is the target supply water temperature used when the L1 heating
@@ -456,7 +456,7 @@ class OumanEh800Client:
         result = await self._set_int_endpoint(L1Endpoints.TEMPERATURE_DROP, temperature)
         return result
 
-    async def set_l1_big_temperature_drop(self, temperature: int) -> int:
+    async def set_l1_big_temperature_drop(self, temperature: int) -> float:
         """Set the supply water setpoint for "big temperature drop" operation
         mode on L1.
 
@@ -474,7 +474,7 @@ class OumanEh800Client:
         )
         return result
 
-    async def set_l1_water_out_minimum_temperature(self, temperature: int) -> int:
+    async def set_l1_water_out_minimum_temperature(self, temperature: int) -> float:
         """Set the minimum outgoing water temperature for L1 heating circuit.
 
         Args:
@@ -488,7 +488,7 @@ class OumanEh800Client:
         )
         return result
 
-    async def set_l1_water_out_maximum_temperature(self, temperature: int) -> int:
+    async def set_l1_water_out_maximum_temperature(self, temperature: int) -> float:
         """Set the maximum outgoing water temperature for L1 heating circuit.
 
         Args:
@@ -555,7 +555,7 @@ class OumanEh800Client:
             raise TypeError(f"Unexpected return type: {type(result).__name__}")
         return result
 
-    async def set_l2_valve_position_setpoint(self, position: int) -> int:
+    async def set_l2_valve_position_setpoint(self, position: int) -> float:
         """Set the valve position setpoint for L2 heating circuit.
 
         Args:
@@ -569,7 +569,7 @@ class OumanEh800Client:
         )
         return result
 
-    async def set_l2_curve_minus_20_temp(self, temperature: int) -> int:
+    async def set_l2_curve_minus_20_temp(self, temperature: int) -> float:
         """Set the heating curve temperature at -20°C outdoor temp for L2.
 
         Args:
@@ -583,7 +583,7 @@ class OumanEh800Client:
         )
         return result
 
-    async def set_l2_curve_0_temp(self, temperature: int) -> int:
+    async def set_l2_curve_0_temp(self, temperature: int) -> float:
         """Set the heating curve temperature at 0°C outdoor temp for L2.
 
         Args:
@@ -595,7 +595,7 @@ class OumanEh800Client:
         result = await self._set_int_endpoint(L2Endpoints.CURVE_0_TEMP, temperature)
         return result
 
-    async def set_l2_curve_20_temp(self, temperature: int) -> int:
+    async def set_l2_curve_20_temp(self, temperature: int) -> float:
         """Set the heating curve temperature at +20°C outdoor temp for L2.
 
         Args:
@@ -607,7 +607,7 @@ class OumanEh800Client:
         result = await self._set_int_endpoint(L2Endpoints.CURVE_20_TEMP, temperature)
         return result
 
-    async def set_l2_temperature_drop(self, temperature: int) -> int:
+    async def set_l2_temperature_drop(self, temperature: int) -> float:
         """Set the supply water setpoint for "temperature drop" operation mode on L2.
 
         This is the target supply water temperature used when the L2 heating
@@ -622,7 +622,7 @@ class OumanEh800Client:
         result = await self._set_int_endpoint(L2Endpoints.TEMPERATURE_DROP, temperature)
         return result
 
-    async def set_l2_big_temperature_drop(self, temperature: int) -> int:
+    async def set_l2_big_temperature_drop(self, temperature: int) -> float:
         """Set the supply water setpoint for "big temperature drop" operation
         mode on L2.
 
@@ -640,7 +640,7 @@ class OumanEh800Client:
         )
         return result
 
-    async def set_l2_water_out_minimum_temperature(self, temperature: int) -> int:
+    async def set_l2_water_out_minimum_temperature(self, temperature: int) -> float:
         """Set the minimum outgoing water temperature for L2 heating circuit.
 
         Args:
@@ -654,7 +654,7 @@ class OumanEh800Client:
         )
         return result
 
-    async def set_l2_water_out_maximum_temperature(self, temperature: int) -> int:
+    async def set_l2_water_out_maximum_temperature(self, temperature: int) -> float:
         """Set the maximum outgoing water temperature for L2 heating circuit.
 
         Args:
