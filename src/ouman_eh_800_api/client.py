@@ -81,8 +81,7 @@ class OumanEh800Client:
             values=values_result,
         )
 
-    def _construct_request_url(self, path: str, params: Iterable[str]) -> str:
-        request_url = f"{self._address}/{path}"
+    def _construct_request_path(self, name: str, params: Iterable[str]) -> str:
         # Append gmt string and equals symbol to match what the web UI does.
         # The requests work without this param as well, except when there are
         # no other params.
@@ -96,11 +95,10 @@ class OumanEh800Client:
         )
         params = list(params)
         params.append(gmt_string_param)
-        request_url += "?" + ";".join(params)
-        return request_url
+        return f"{name}?" + ";".join(params)
 
-    async def _request(self, path: str, params: Iterable[str]) -> _OumanResponse:
-        request_url = self._construct_request_url(path, params)
+    async def _get(self, path: str) -> str:
+        request_url = f"{self._address}/{path}"
         try:
             async with asyncio.timeout(10):
                 async with self._session.get(request_url) as response:
@@ -108,15 +106,21 @@ class OumanEh800Client:
 
                     response_text = await response.text()
                     _LOGGER.debug("Raw response from device: '%s'", response_text)
-
-                    parsed_response = self._parse_api_response(response_text)
-                    return parsed_response
+                    return response_text
         except TimeoutError as err:
             raise OumanClientCommunicationError("Timeout connecting to device") from err
         except aiohttp.ClientResponseError as err:
             raise OumanClientCommunicationError(f"HTTP Error: {err.status}") from err
         except aiohttp.ClientError as err:
             raise OumanClientCommunicationError(f"Network error: {err}") from err
+
+    async def _fetch_raw(self, name: str, params: Iterable[str] = ()) -> str:
+        path = self._construct_request_path(name, params)
+        return await self._get(path)
+
+    async def _fetch_parsed(self, name: str, params: Iterable[str]) -> _OumanResponse:
+        response_text = await self._fetch_raw(name, params)
+        return self._parse_api_response(response_text)
 
     async def login(self) -> None:
         """Authenticate with the Ouman EH-800 device.
@@ -125,7 +129,7 @@ class OumanEh800Client:
             OumanClientAuthenticationError: If authentication fails.
             OumanClientError: If the response is unexpected.
         """
-        response = await self._request(
+        response = await self._fetch_parsed(
             "login", [f"uid={self._username}", f"pwd={self._password}"]
         )
 
@@ -139,7 +143,7 @@ class OumanEh800Client:
             )
 
     async def _get_values(self, endpoint_ids: Sequence[str]) -> _OumanResponse:
-        response = await self._request("request", endpoint_ids)
+        response = await self._fetch_parsed("request", endpoint_ids)
         for endpoint_id in endpoint_ids:
             if endpoint_id not in response.values:
                 _LOGGER.warning(
@@ -177,7 +181,7 @@ class OumanEh800Client:
         request_path = "update"
         params = [f"{key}={value}" for key, value in key_value_params.items()]
         try:
-            response = await self._request(request_path, params)
+            response = await self._fetch_parsed(request_path, params)
         except OumanClientCommunicationError as err:
             if not isinstance(err.__cause__, aiohttp.ClientResponseError):
                 raise
@@ -185,7 +189,7 @@ class OumanEh800Client:
                 raise
             _LOGGER.debug("404 response from update request, logging in...")
             await self.login()
-            response = await self._request(request_path, params)
+            response = await self._fetch_parsed(request_path, params)
         return response
 
     async def _set_int_endpoint(
@@ -775,7 +779,7 @@ class OumanEh800Client:
         Returns:
             A mapping of alarm identifiers to their values.
         """
-        response = await self._request("alarms", [])
+        response = await self._fetch_parsed("alarms", [])
         return response.values
 
     async def logout(self) -> None:
@@ -784,7 +788,7 @@ class OumanEh800Client:
         Raises:
             OumanClientError: If the logout fails.
         """
-        response = await self._request("logout", [])
+        response = await self._fetch_parsed("logout", [])
         if response.values.get("result") != "ok":
             raise OumanClientError(
                 f"Unexpected response from logout request: {response}"
