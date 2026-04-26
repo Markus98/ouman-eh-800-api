@@ -34,8 +34,23 @@ from .registry import (
     L2ThreePointCurve,
     OumanRegistry,
     OumanRegistrySet,
+    RelayL1ValvePosition,
+    RelayPumpSummerStop,
+    RelayTempDifference,
+    RelayTemperature,
+    RelayTimeProgram,
     SystemEndpoints,
 )
+
+# Map from the relay-mode-specific control sensor ID (as advertised in the
+# `relay?` response) to the registry fragment that models it.
+_RELAY_FRAGMENTS_BY_SENSOR_ID: Mapping[str, type[OumanRegistry]] = {
+    RelayPumpSummerStop.CONTROL.sensor_endpoint_id: RelayPumpSummerStop,
+    RelayTemperature.CONTROL.sensor_endpoint_id: RelayTemperature,
+    RelayTempDifference.CONTROL.sensor_endpoint_id: RelayTempDifference,
+    RelayL1ValvePosition.CONTROL.sensor_endpoint_id: RelayL1ValvePosition,
+    RelayTimeProgram.CONTROL.sensor_endpoint_id: RelayTimeProgram,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -406,6 +421,16 @@ class OumanEh800Client:
         body = await self._fetch_raw("settingsl2")
         return L2FivePointCurve.CURVE_MINUS_20_TEMP.sensor_endpoint_id in body
 
+    async def _get_relay_fragment(self) -> type[OumanRegistry] | None:
+        # The relay-mode control sensor ID appears in the `relay?` response.
+        # Returns None when relay control is not in use or in general-alarm
+        # mode (neither has a controllable enum endpoint).
+        body = await self._fetch_raw("relay")
+        for sensor_id, fragment in _RELAY_FRAGMENTS_BY_SENSOR_ID.items():
+            if sensor_id in body:
+                return fragment
+        return None
+
     async def get_active_registries(self) -> OumanRegistrySet:
         """Get the list of active registries which contain the sets of
         endpoints that can currently be read and written to."""
@@ -431,6 +456,9 @@ class OumanEh800Client:
                 registries.append(L2RoomSensor)
             else:
                 registries.append(L2NoRoomSensor)
+
+        if (relay_fragment := await self._get_relay_fragment()) is not None:
+            registries.append(relay_fragment)
 
         return OumanRegistrySet(registries)
 
