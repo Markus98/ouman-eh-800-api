@@ -155,26 +155,26 @@ def test_parse_response(response_text: str, prefix: str, params_n: int):
 
 
 # =============================================================================
-# Tests for _construct_request_url
+# Tests for _construct_request_path
 # =============================================================================
 
 
-def test_construct_request_url_with_params(client: OumanEh800Client):
-    url = client._construct_request_url("request", ["S_227_85", "S_259_85"])
-    assert url.startswith(f"{MOCK_ADDRESS}/request?")
-    assert "S_227_85" in url
-    assert "S_259_85" in url
+def test_construct_request_path_with_params(client: OumanEh800Client):
+    path = client._construct_request_path("request", ["S_227_85", "S_259_85"])
+    assert path.startswith("request?")
+    assert "S_227_85" in path
+    assert "S_259_85" in path
     # Check GMT string is appended
-    assert "GMT" in url
+    assert "GMT" in path
     # Check params are separated by semicolons
-    assert ";" in url
+    assert ";" in path
 
 
-def test_construct_request_url_empty_params(client: OumanEh800Client):
-    url = client._construct_request_url("alarms", [])
-    assert url.startswith(f"{MOCK_ADDRESS}/alarms?")
+def test_construct_request_path_empty_params(client: OumanEh800Client):
+    path = client._construct_request_path("alarms", [])
+    assert path.startswith("alarms?")
     # Should still have the GMT string
-    assert "GMT" in url
+    assert "GMT" in path
 
 
 # =============================================================================
@@ -190,7 +190,7 @@ async def test_request_http_error(client: OumanEh800Client, m: aioresponses):
     )
 
     with pytest.raises(OumanClientCommunicationError) as exc_info:
-        await client._request("request", ["S_227_85"])
+        await client._fetch_parsed("request", ["S_227_85"])
 
     assert "HTTP Error: 500" in str(exc_info.value)
 
@@ -203,7 +203,7 @@ async def test_request_network_error(client: OumanEh800Client, m: aioresponses):
     )
 
     with pytest.raises(OumanClientCommunicationError) as exc_info:
-        await client._request("request", ["S_227_85"])
+        await client._fetch_parsed("request", ["S_227_85"])
 
     assert "Network error" in str(exc_info.value)
 
