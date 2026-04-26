@@ -48,22 +48,6 @@ class TestRegistryConflicting(OumanRegistry):
     )
 
 
-class TestRegistryChild(TestRegistryA):
-    """Child registry that inherits from TestRegistryA and overrides ENDPOINT_1"""
-
-    ENDPOINT_1 = NumberOumanEndpoint(
-        name="test_endpoint_1_override",
-        unit=OumanUnit.PERCENT,
-        sensor_endpoint_id="S_TEST_1_OVERRIDE",
-    )
-
-    ENDPOINT_4 = NumberOumanEndpoint(
-        name="test_endpoint_4",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_TEST_4",
-    )
-
-
 # =============================================================================
 # Tests for OumanRegistrySet.__post_init__
 # =============================================================================
@@ -179,7 +163,7 @@ def test_registry_set_l1_and_l2_bases():
 
 
 # =============================================================================
-# Tests for OumanRegistry.iterate_endpoints (inheritance and overriding)
+# Tests for OumanRegistry.iterate_endpoints
 # =============================================================================
 
 
@@ -190,29 +174,6 @@ def test_iterate_endpoints_returns_all_endpoints():
     assert len(endpoints) == 2
     assert TestRegistryA.ENDPOINT_1 in endpoints
     assert TestRegistryA.ENDPOINT_2 in endpoints
-
-
-def test_iterate_endpoints_child_includes_parent_endpoints():
-    """iterate_endpoints on child should include inherited parent endpoints."""
-    endpoints = list(TestRegistryChild.iterate_endpoints())
-
-    # Should have: overridden ENDPOINT_1, inherited ENDPOINT_2, new ENDPOINT_4
-    assert len(endpoints) == 3
-    assert TestRegistryA.ENDPOINT_2 in endpoints
-    assert TestRegistryChild.ENDPOINT_4 in endpoints
-
-
-def test_iterate_endpoints_child_overrides_parent_endpoint():
-    """iterate_endpoints on child should use child's version of overridden endpoints."""
-    endpoints = list(TestRegistryChild.iterate_endpoints())
-
-    # Should contain the child's ENDPOINT_1, not the parent's
-    assert TestRegistryChild.ENDPOINT_1 in endpoints
-    assert TestRegistryA.ENDPOINT_1 not in endpoints
-
-    # Verify the override has the new sensor_endpoint_id
-    endpoint_1 = next(e for e in endpoints if e.name == "test_endpoint_1_override")
-    assert endpoint_1.sensor_endpoint_id == "S_TEST_1_OVERRIDE"
 
 
 def test_l1_no_room_sensor_and_room_sensor_share_drop_names():

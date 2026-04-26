@@ -15,23 +15,15 @@ from .endpoint import (
 class OumanRegistry:
     """Base class for endpoint registry definitions.
 
-    Subclasses define endpoints as class attributes. Child registries
-    can override parent endpoints by redefining them with the same name.
+    Subclasses define endpoints as class attributes.
     """
 
     @classmethod
     def iterate_endpoints(cls) -> Generator[OumanEndpoint]:
-        """Iterate over all OumanEndpoints in this class and its parents.
-
-        Subclass definitions override parent class definitions.
-        """
-        seen_keys = set()
-        for base in cls.mro():
-            for key, value in base.__dict__.items():
-                # Avoid yielding the same endpoint twice if overridden
-                if key not in seen_keys and isinstance(value, OumanEndpoint):
-                    seen_keys.add(key)
-                    yield value
+        """Iterate over the OumanEndpoints defined directly on this class."""
+        for value in cls.__dict__.values():
+            if isinstance(value, OumanEndpoint):
+                yield value
 
 
 @dataclass
