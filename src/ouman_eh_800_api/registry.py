@@ -211,12 +211,6 @@ class L1Endpoints(OumanRegistry):
         max_val=4.0,
     )
 
-    HEATING_SHUTDOWN_STATUS = OumanEndpoint(
-        name="l1_heating_shutdown_status",
-        unit=None,
-        sensor_endpoint_id="S_0_0",
-    )
-
     TEMPERATURE_LEVEL_STATUS_TEXT = OumanEndpoint(
         name="l1_temperature_level_status_text",
         unit=None,
@@ -432,12 +426,6 @@ class L2EndpointsWithRoomSensor(L2Endpoints):
     Extends L2Endpoints with additional room sensor endpoints and
     overrides ROOM_TEMPERATURE_FINE_TUNING with the correct control endpoint.
     """
-
-    ROOM_SENSOR_POTENTIOMETER = NumberOumanEndpoint(
-        name="l2_room_sensor_potentiometer",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_307_85",
-    )
 
     ROOM_TEMPERATURE = NumberOumanEndpoint(
         name="l2_room_temperature",
