@@ -1,5 +1,13 @@
 from .client import OumanEh800Client
-from .const import ControlEnum, HomeAwayControl, OperationMode, OumanUnit, OumanValues
+from .const import (
+    ControlEnum,
+    HomeAwayControl,
+    OperationMode,
+    OumanUnit,
+    OumanValues,
+    PumpSummerStopControl,
+    RelayControl,
+)
 from .endpoint import (
     ControllableEndpoint,
     EnumControlOumanEndpoint,
@@ -27,6 +35,11 @@ from .registry import (
     L2ThreePointCurve,
     OumanRegistry,
     OumanRegistrySet,
+    RelayL1ValvePosition,
+    RelayPumpSummerStop,
+    RelayTempDifference,
+    RelayTemperature,
+    RelayTimeProgram,
     SystemEndpoints,
 )
 
@@ -38,6 +51,8 @@ __all__ = [
     "HomeAwayControl",
     "OperationMode",
     "OumanUnit",
+    "PumpSummerStopControl",
+    "RelayControl",
     # Registry
     "OumanRegistry",
     "OumanRegistrySet",
@@ -53,6 +68,11 @@ __all__ = [
     "L2FivePointCurve",
     "L2NoRoomSensor",
     "L2RoomSensor",
+    "RelayPumpSummerStop",
+    "RelayTemperature",
+    "RelayTempDifference",
+    "RelayL1ValvePosition",
+    "RelayTimeProgram",
     # Endpoint types
     "OumanEndpoint",
     "OumanValues",

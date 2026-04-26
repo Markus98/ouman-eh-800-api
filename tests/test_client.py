@@ -29,6 +29,11 @@ from ouman_eh_800_api.registry import (
     L2RoomSensor,
     L2ThreePointCurve,
     OumanRegistrySet,
+    RelayL1ValvePosition,
+    RelayPumpSummerStop,
+    RelayTempDifference,
+    RelayTemperature,
+    RelayTimeProgram,
     SystemEndpoints,
 )
 
@@ -837,6 +842,45 @@ async def test_is_l2_five_point_curve_false(client: OumanEh800Client, m: aioresp
 
 
 # =============================================================================
+# Tests for _get_relay_fragment
+# =============================================================================
+
+
+@pytest.mark.parametrize(
+    "body,expected",
+    [
+        ("Automaatti,S_364_85;Seis,S_364_85;Käy,S_364_85;", RelayPumpSummerStop),
+        ("Automaatti,S_330_85;ON,S_330_85;OFF,S_330_85;", RelayTemperature),
+        ("Automaatti,S_340_85;ON,S_340_85;OFF,S_340_85;", RelayTempDifference),
+        ("Automaatti,S_336_85;ON,S_336_85;OFF,S_336_85;", RelayL1ValvePosition),
+        ("Automaatti,S_362_85;ON,S_362_85;OFF,S_362_85;", RelayTimeProgram),
+        ("Rele ei käytössä,S_0_85;", None),
+        ("Rele on summahälytyskäytössä,S_0_85;", None),
+    ],
+    ids=[
+        "pump_summer_stop",
+        "temperature",
+        "temp_difference",
+        "valve_position",
+        "time_program",
+        "not_in_use",
+        "general_alarm",
+    ],
+)
+@pytest.mark.asyncio
+async def test_get_relay_fragment(
+    client: OumanEh800Client, m: aioresponses, body: str, expected
+):
+    m.get(
+        f"{MOCK_ADDRESS}/relay?{MOCK_DATE_PARAM}",
+        body=f"relay?{body}\x00",
+        status=200,
+    )
+
+    assert await client._get_relay_fragment() is expected
+
+
+# =============================================================================
 # Tests for get_active_registries
 # =============================================================================
 
@@ -861,6 +905,7 @@ _THREE_POINT_L1_BODY = "-20,S_61_85;0,S_63_85;20,S_65_85;"
 _FIVE_POINT_L1_BODY = "-20,S_67_85;-10,S_69_85;0,S_71_85;10,S_73_85;20,S_75_85;"
 _THREE_POINT_L2_BODY = "-20,S_148_85;0,S_150_85;20,S_152_85;"
 _FIVE_POINT_L2_BODY = "-20,S_154_85;-10,S_156_85;0,S_158_85;10,S_160_85;20,S_162_85;"
+_RELAY_NOT_IN_USE_BODY = "Rele ei käytössä,S_0_85;"
 
 
 @pytest.mark.asyncio
@@ -868,6 +913,7 @@ async def test_get_active_registries_l1_only_no_room_sensor_three_point(
     client: OumanEh800Client, m: aioresponses
 ):
     _mock_settings(m, "settingsl1", _THREE_POINT_L1_BODY)
+    _mock_settings(m, "relay", _RELAY_NOT_IN_USE_BODY)
     _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "off")
     _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "0")
 
@@ -886,6 +932,7 @@ async def test_get_active_registries_l1_with_room_sensor_five_point(
     client: OumanEh800Client, m: aioresponses
 ):
     _mock_settings(m, "settingsl1", _FIVE_POINT_L1_BODY)
+    _mock_settings(m, "relay", _RELAY_NOT_IN_USE_BODY)
     _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "on")
     _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "0")
 
@@ -905,6 +952,7 @@ async def test_get_active_registries_l1_and_l2_no_room_sensors(
 ):
     _mock_settings(m, "settingsl1", _THREE_POINT_L1_BODY)
     _mock_settings(m, "settingsl2", _THREE_POINT_L2_BODY)
+    _mock_settings(m, "relay", _RELAY_NOT_IN_USE_BODY)
     _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "off")
     _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "1")
     _mock_request(m, L2BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "off")
@@ -928,6 +976,7 @@ async def test_get_active_registries_all_with_room_sensors(
 ):
     _mock_settings(m, "settingsl1", _FIVE_POINT_L1_BODY)
     _mock_settings(m, "settingsl2", _FIVE_POINT_L2_BODY)
+    _mock_settings(m, "relay", _RELAY_NOT_IN_USE_BODY)
     _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "on")
     _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "1")
     _mock_request(m, L2BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "on")
@@ -943,6 +992,20 @@ async def test_get_active_registries_all_with_room_sensors(
         L2FivePointCurve,
         L2RoomSensor,
     }
+
+
+@pytest.mark.asyncio
+async def test_get_active_registries_with_relay_temperature_mode(
+    client: OumanEh800Client, m: aioresponses
+):
+    _mock_settings(m, "settingsl1", _THREE_POINT_L1_BODY)
+    _mock_settings(m, "relay", "Automaatti,S_330_85;ON,S_330_85;OFF,S_330_85;")
+    _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "off")
+    _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "0")
+
+    result = await client.get_active_registries()
+
+    assert RelayTemperature in result.registries
 
 
 # =============================================================================

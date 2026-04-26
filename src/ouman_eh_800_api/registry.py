@@ -2,7 +2,13 @@ from collections.abc import Generator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import cached_property
 
-from .const import HomeAwayControl, OperationMode, OumanUnit
+from .const import (
+    HomeAwayControl,
+    OperationMode,
+    OumanUnit,
+    PumpSummerStopControl,
+    RelayControl,
+)
 from .endpoint import (
     EnumControlOumanEndpoint,
     FloatControlOumanEndpoint,
@@ -680,4 +686,99 @@ class L2RoomSensor(OumanRegistry):
         name="l2_room_temperature_setpoint",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_313_85",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Relay control fragments
+#
+# The relay's control sensor ID depends on which relay-control mode is
+# configured (manual p.36-37). Exactly one of these fragments is active at
+# a time; general-alarm mode and "not in use" expose no controllable
+# endpoint and have no fragment here.
+#
+# Each fragment models only the Auto/ON/OFF (or Auto/Stop/Run) override.
+#
+# TODO: Per-mode threshold/hysteresis/measurement configuration IDs are
+# not yet known — manual p.36-37 specifies them ("setting at which the
+# relay is active", "hysteresis", "valve position where relay is active",
+# etc.) but they live on a relay-config webui sub-page that hasn't been
+# captured yet. Capture and add them here once known. Likely candidates:
+# the temperature / temperature-difference / valve-position modes each
+# have 2-4 extra setpoints that should join their respective fragments.
+# ---------------------------------------------------------------------------
+
+
+class RelayPumpSummerStop(OumanRegistry):
+    """Relay control endpoint when the relay is configured for pump summer
+    stop. Uses PumpSummerStopControl (Auto / Stop / Run).
+
+    The `name` differs from the other relay fragments because the value-1 /
+    value-2 semantics are inverted (pump-OFF is value 1 here, value 2 in
+    the other modes); using a distinct entity avoids consumer-side remap
+    logic if the user changes relay mode."""
+
+    CONTROL = EnumControlOumanEndpoint(
+        name="relay_pump_summer_stop_control",
+        unit=None,
+        sensor_endpoint_id="S_364_85",
+        control_endpoint_ids=("S_364_85",),
+        response_endpoint_ids=("S_364_85",),
+        enum_type=PumpSummerStopControl,
+    )
+
+
+class RelayTemperature(OumanRegistry):
+    """Relay control endpoint when the relay is configured to follow a
+    temperature measurement. Uses RelayControl (Auto / ON / OFF)."""
+
+    CONTROL = EnumControlOumanEndpoint(
+        name="relay_control",
+        unit=None,
+        sensor_endpoint_id="S_330_85",
+        control_endpoint_ids=("S_330_85",),
+        response_endpoint_ids=("S_330_85",),
+        enum_type=RelayControl,
+    )
+
+
+class RelayTempDifference(OumanRegistry):
+    """Relay control endpoint when the relay is configured to follow a
+    temperature difference. Uses RelayControl (Auto / ON / OFF)."""
+
+    CONTROL = EnumControlOumanEndpoint(
+        name="relay_control",
+        unit=None,
+        sensor_endpoint_id="S_340_85",
+        control_endpoint_ids=("S_340_85",),
+        response_endpoint_ids=("S_340_85",),
+        enum_type=RelayControl,
+    )
+
+
+class RelayL1ValvePosition(OumanRegistry):
+    """Relay control endpoint when the relay is configured to follow the L1
+    valve position. Uses RelayControl (Auto / ON / OFF)."""
+
+    CONTROL = EnumControlOumanEndpoint(
+        name="relay_control",
+        unit=None,
+        sensor_endpoint_id="S_336_85",
+        control_endpoint_ids=("S_336_85",),
+        response_endpoint_ids=("S_336_85",),
+        enum_type=RelayControl,
+    )
+
+
+class RelayTimeProgram(OumanRegistry):
+    """Relay control endpoint when the relay is configured to follow a time
+    program. Uses RelayControl (Auto / ON / OFF)."""
+
+    CONTROL = EnumControlOumanEndpoint(
+        name="relay_control",
+        unit=None,
+        sensor_endpoint_id="S_362_85",
+        control_endpoint_ids=("S_362_85",),
+        response_endpoint_ids=("S_362_85",),
+        enum_type=RelayControl,
     )

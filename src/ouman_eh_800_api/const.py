@@ -20,7 +20,29 @@ class OperationMode(StrEnum):
     MANUAL_VALVE_CONTROL = "6"
 
 
-ControlEnum = HomeAwayControl | OperationMode
+class RelayControl(StrEnum):
+    """Manual override for the relay in temperature, temperature-difference,
+    L1 valve-position, and time-program modes."""
+
+    AUTO = "0"
+    ON = "1"
+    OFF = "2"
+
+
+class PumpSummerStopControl(StrEnum):
+    """Manual override for the relay in pump-summer-stop mode.
+
+    Note that the value-1 / value-2 semantics are inverted compared to
+    `RelayControl`: here `STOP` (force pump off) is `"1"` and `RUN` (force
+    pump on) is `"2"`.
+    """
+
+    AUTO = "0"
+    STOP = "1"
+    RUN = "2"
+
+
+ControlEnum = HomeAwayControl | OperationMode | RelayControl | PumpSummerStopControl
 """Type alias which contains all of the possible enums used for control operations"""
 
 OumanValues = str | float | ControlEnum
