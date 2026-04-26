@@ -184,6 +184,15 @@ class L1Endpoints(OumanRegistry):
         max_val=90,
     )
 
+    CONSTANT_TEMP_SETPOINT = IntControlOumanEndpoint(
+        name="l1_constant_temp_setpoint",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_127_85",
+        control_endpoint_id="@_S_127_85",
+        min_val=0,
+        max_val=95,
+    )
+
     WATER_OUT_MIN_TEMP = IntControlOumanEndpoint(
         name="l1_water_out_minimum_temperature",
         unit=OumanUnit.CELSIUS,
@@ -235,14 +244,24 @@ class L1Endpoints(OumanRegistry):
         sensor_endpoint_id="S_272_85",
     )
 
+    CURVE_SUPPLY_WATER_TEMPERATURE = NumberOumanEndpoint(
+        name="l1_curve_supply_water_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_260_85",
+    )
+
+    FINE_ADJUSTMENT_EFFECT = NumberOumanEndpoint(
+        name="l1_fine_adjustment_effect",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_286_85",
+    )
+
     SUPPLY_WATER_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
         name="l1_supply_water_temperature_setpoint",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_275_85",
     )
 
-    # TODO: make this into an enum endpoint when we know what other
-    # values are possible besides "off"
     ROOM_SENSOR_INSTALLED = OumanEndpoint(
         name="l1_room_sensor_installed",
         unit=None,
@@ -253,11 +272,45 @@ class L1Endpoints(OumanRegistry):
 class L1EndpointsWithRoomSensor(L1Endpoints):
     """Endpoints for L1 heating circuit with a room sensor installed.
 
-    Note: The endpoints in this registry have not been verified.
-
-    Extends L1Endpoints with additional room sensor endpoints and
-    overrides ROOM_TEMPERATURE_FINE_TUNING with the correct control endpoint.
+    Extends L1Endpoints with additional room sensor endpoints and overrides:
+    - TEMPERATURE_DROP / BIG_TEMPERATURE_DROP point at the room-temperature
+      drop IDs (S_87_85 / S_88_85). The shared `name` is intentional — the
+      device UI labels both as "Lämmönpudotus" with a parenthetical mode
+      qualifier; only the underlying axis differs (supply-water-°C drop
+      without sensor, room-temp-°C drop with sensor). Value scales differ.
+    - ROOM_TEMPERATURE_FINE_TUNING points at the room-mode control endpoint.
     """
+
+    # NOTE: Override of L1Endpoints.TEMPERATURE_DROP. With a room sensor the
+    # device exposes the drop as a direct room-temp drop on a different ID.
+    TEMPERATURE_DROP = IntControlOumanEndpoint(
+        name="l1_temperature_drop",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_87_85",
+        control_endpoint_id="@_S_87_85",
+        min_val=0,
+        max_val=90,
+    )
+
+    # NOTE: Override of L1Endpoints.BIG_TEMPERATURE_DROP. Same rationale as
+    # TEMPERATURE_DROP above.
+    BIG_TEMPERATURE_DROP = IntControlOumanEndpoint(
+        name="l1_big_temperature_drop",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_88_85",
+        control_endpoint_id="@_S_88_85",
+        min_val=0,
+        max_val=90,
+    )
+
+    ROOM_TEMPERATURE_SETPOINT_USER = IntControlOumanEndpoint(
+        name="l1_room_temperature_setpoint_user",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_81_85",
+        control_endpoint_id="@_S_81_85",
+        min_val=5,
+        max_val=50,
+    )
 
     ROOM_SENSOR_POTENTIOMETER = NumberOumanEndpoint(
         name="l1_room_sensor_potentiometer",
@@ -269,6 +322,12 @@ class L1EndpointsWithRoomSensor(L1Endpoints):
         name="l1_room_temperature",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_261_85",
+    )
+
+    DELAYED_ROOM_TEMPERATURE = NumberOumanEndpoint(
+        name="l1_delayed_room_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_262_85",
     )
 
     ROOM_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
@@ -401,6 +460,24 @@ class L2Endpoints(OumanRegistry):
         name="l2_supply_water_temperature",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_293_85",
+    )
+
+    VALVE_POSITION = NumberOumanEndpoint(
+        name="l2_valve_position",
+        unit=OumanUnit.PERCENT,
+        sensor_endpoint_id="S_306_85",
+    )
+
+    CURVE_SUPPLY_WATER_TEMPERATURE = NumberOumanEndpoint(
+        name="l2_curve_supply_water_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_294_85",
+    )
+
+    DELAYED_OUTDOOR_TEMPERATURE_EFFECT = NumberOumanEndpoint(
+        name="l2_delayed_outdoor_temperature_effect",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_292_85",
     )
 
     SUPPLY_WATER_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
