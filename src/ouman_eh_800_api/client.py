@@ -719,12 +719,8 @@ class OumanEh800Client:
         if value is None:
             raise ValueError("Response value should be defined")
 
-        # FIXME:
-        # This is a temporary solution. It hasn't been tested what the
-        # endpoint returns when L2 is installed, so now we
-        # just assume that when the value differs from the falsy value,
-        # it is means it is truthy and L2 is installed.
-        return value != "0"
+        # Observed values: '0' (L2 disabled), '1' (L2 enabled in software).
+        return value == "1"
 
     async def _get_is_room_sensor_installed(self, endpoint_id: str) -> bool:
         response = await self._get_values([endpoint_id])
