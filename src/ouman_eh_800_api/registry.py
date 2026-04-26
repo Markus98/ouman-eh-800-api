@@ -348,6 +348,62 @@ class L1EndpointsWithRoomSensor(L1Endpoints):
     )
 
 
+class L1FivePointCurve(OumanRegistry):
+    """L1 5-point heating curve setpoints.
+
+    Mutually exclusive with the 3-point curve endpoints in L1Endpoints
+    (CURVE_MINUS_20_TEMP, CURVE_0_TEMP, CURVE_20_TEMP). The device exposes
+    one set or the other based on Heating curve type setting (manual p.30).
+    Endpoints intentionally share `name` with their 3-point counterparts
+    where they overlap (-20, 0, +20).
+    """
+
+    CURVE_MINUS_20_TEMP = IntControlOumanEndpoint(
+        name="l1_curve_minus_20_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_67_85",
+        control_endpoint_id="@_S_67_85",
+        min_val=0,
+        max_val=99,
+    )
+
+    CURVE_MINUS_10_TEMP = IntControlOumanEndpoint(
+        name="l1_curve_minus_10_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_69_85",
+        control_endpoint_id="@_S_69_85",
+        min_val=0,
+        max_val=99,
+    )
+
+    CURVE_0_TEMP = IntControlOumanEndpoint(
+        name="l1_curve_0_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_71_85",
+        control_endpoint_id="@_S_71_85",
+        min_val=0,
+        max_val=99,
+    )
+
+    CURVE_10_TEMP = IntControlOumanEndpoint(
+        name="l1_curve_10_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_73_85",
+        control_endpoint_id="@_S_73_85",
+        min_val=0,
+        max_val=99,
+    )
+
+    CURVE_20_TEMP = IntControlOumanEndpoint(
+        name="l1_curve_20_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_75_85",
+        control_endpoint_id="@_S_75_85",
+        min_val=0,
+        max_val=99,
+    )
+
+
 class L2Endpoints(OumanRegistry):
     """Endpoints for the L2 (secondary) heating circuit.
 
@@ -525,4 +581,60 @@ class L2EndpointsWithRoomSensor(L2Endpoints):
         control_endpoint_id="@_S_189_85",
         min_val=-4.0,
         max_val=4.0,
+    )
+
+
+class L2FivePointCurve(OumanRegistry):
+    """L2 5-point heating curve setpoints.
+
+    Mutually exclusive with the 3-point curve endpoints in L2Endpoints
+    (CURVE_MINUS_20_TEMP, CURVE_0_TEMP, CURVE_20_TEMP). The device exposes
+    one set or the other based on Heating curve type setting (manual p.30).
+    Endpoints intentionally share `name` with their 3-point counterparts
+    where they overlap (-20, 0, +20).
+    """
+
+    CURVE_MINUS_20_TEMP = IntControlOumanEndpoint(
+        name="l2_curve_minus_20_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_154_85",
+        control_endpoint_id="@_S_154_85",
+        min_val=0,
+        max_val=99,
+    )
+
+    CURVE_MINUS_10_TEMP = IntControlOumanEndpoint(
+        name="l2_curve_minus_10_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_156_85",
+        control_endpoint_id="@_S_156_85",
+        min_val=0,
+        max_val=99,
+    )
+
+    CURVE_0_TEMP = IntControlOumanEndpoint(
+        name="l2_curve_0_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_158_85",
+        control_endpoint_id="@_S_158_85",
+        min_val=0,
+        max_val=99,
+    )
+
+    CURVE_10_TEMP = IntControlOumanEndpoint(
+        name="l2_curve_10_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_160_85",
+        control_endpoint_id="@_S_160_85",
+        min_val=0,
+        max_val=99,
+    )
+
+    CURVE_20_TEMP = IntControlOumanEndpoint(
+        name="l2_curve_20_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_162_85",
+        control_endpoint_id="@_S_162_85",
+        min_val=0,
+        max_val=99,
     )
