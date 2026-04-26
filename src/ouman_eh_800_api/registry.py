@@ -626,12 +626,25 @@ class L2RoomSensor(OumanRegistry):
     """L2 endpoints exposed when a room sensor is installed.
 
     Mutually exclusive with L2NoRoomSensor.
-
-    Note: The TEMPERATURE_DROP / BIG_TEMPERATURE_DROP / DELAYED_ROOM_TEMPERATURE
-    / ROOM_TEMPERATURE_SETPOINT_USER variants for L2 with a room sensor have
-    not been captured against real hardware (no L2 hardware available to the
-    developer); add them here once the IDs are known.
     """
+
+    TEMPERATURE_DROP = IntControlOumanEndpoint(
+        name="l2_temperature_drop",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_174_85",
+        control_endpoint_id="@_S_174_85",
+        min_val=0,
+        max_val=90,
+    )
+
+    BIG_TEMPERATURE_DROP = IntControlOumanEndpoint(
+        name="l2_big_temperature_drop",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_175_85",
+        control_endpoint_id="@_S_175_85",
+        min_val=0,
+        max_val=90,
+    )
 
     ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
         name="l2_room_temperature_fine_tuning",
@@ -642,10 +655,25 @@ class L2RoomSensor(OumanRegistry):
         max_val=4.0,
     )
 
+    ROOM_TEMPERATURE_SETPOINT_USER = IntControlOumanEndpoint(
+        name="l2_room_temperature_setpoint_user",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_168_85",
+        control_endpoint_id="@_S_168_85",
+        min_val=5,
+        max_val=50,
+    )
+
     ROOM_TEMPERATURE = NumberOumanEndpoint(
         name="l2_room_temperature",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_295_85",
+    )
+
+    DELAYED_ROOM_TEMPERATURE = NumberOumanEndpoint(
+        name="l2_delayed_room_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_296_85",
     )
 
     ROOM_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
