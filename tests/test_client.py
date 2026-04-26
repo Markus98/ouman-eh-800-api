@@ -20,8 +20,10 @@ from ouman_eh_800_api.exceptions import (
 from ouman_eh_800_api.registry import (
     L1Endpoints,
     L1EndpointsWithRoomSensor,
+    L1FivePointCurve,
     L2Endpoints,
     L2EndpointsWithRoomSensor,
+    L2FivePointCurve,
     OumanRegistrySet,
     SystemEndpoints,
 )
@@ -777,6 +779,57 @@ async def test_get_is_l2_room_sensor_installed(
     result = await client.get_is_l2_room_sensor_installed()
 
     assert result is False
+
+
+# =============================================================================
+# Tests for _is_l*_five_point_curve
+# =============================================================================
+
+
+@pytest.mark.asyncio
+async def test_is_l1_five_point_curve_true(client: OumanEh800Client, m: aioresponses):
+    five_point_id = L1FivePointCurve.CURVE_MINUS_20_TEMP.sensor_endpoint_id
+    m.get(
+        f"{MOCK_ADDRESS}/settingsl1?{MOCK_DATE_PARAM}",
+        body=f"settingsl1?-20,{five_point_id};-10,S_69_85;0,S_71_85;10,S_73_85;20,S_75_85;\x00",
+        status=200,
+    )
+
+    assert await client._is_l1_five_point_curve() is True
+
+
+@pytest.mark.asyncio
+async def test_is_l1_five_point_curve_false(client: OumanEh800Client, m: aioresponses):
+    m.get(
+        f"{MOCK_ADDRESS}/settingsl1?{MOCK_DATE_PARAM}",
+        body="settingsl1?-20,S_61_85;0,S_63_85;20,S_65_85;\x00",
+        status=200,
+    )
+
+    assert await client._is_l1_five_point_curve() is False
+
+
+@pytest.mark.asyncio
+async def test_is_l2_five_point_curve_true(client: OumanEh800Client, m: aioresponses):
+    five_point_id = L2FivePointCurve.CURVE_MINUS_20_TEMP.sensor_endpoint_id
+    m.get(
+        f"{MOCK_ADDRESS}/settingsl2?{MOCK_DATE_PARAM}",
+        body=f"settingsl2?-20,{five_point_id};-10,S_156_85;0,S_158_85;10,S_160_85;20,S_162_85;\x00",
+        status=200,
+    )
+
+    assert await client._is_l2_five_point_curve() is True
+
+
+@pytest.mark.asyncio
+async def test_is_l2_five_point_curve_false(client: OumanEh800Client, m: aioresponses):
+    m.get(
+        f"{MOCK_ADDRESS}/settingsl2?{MOCK_DATE_PARAM}",
+        body="settingsl2?-20,S_148_85;0,S_150_85;20,S_152_85;\x00",
+        status=200,
+    )
+
+    assert await client._is_l2_five_point_curve() is False
 
 
 # =============================================================================

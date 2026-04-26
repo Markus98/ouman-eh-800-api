@@ -24,8 +24,10 @@ from .exceptions import (
 from .registry import (
     L1Endpoints,
     L1EndpointsWithRoomSensor,
+    L1FivePointCurve,
     L2Endpoints,
     L2EndpointsWithRoomSensor,
+    L2FivePointCurve,
     OumanRegistry,
     OumanRegistrySet,
     SystemEndpoints,
@@ -757,6 +759,17 @@ class OumanEh800Client:
         return await self._get_is_room_sensor_installed(
             L2Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
         )
+
+    async def _is_l1_five_point_curve(self) -> bool:
+        # The 5-point curve uses a disjoint set of sensor IDs from the
+        # 3-point curve. Detect by looking for a 5-point ID in the raw
+        # settingsl1? response, which lists whichever curve is active.
+        body = await self._fetch_raw("settingsl1")
+        return L1FivePointCurve.CURVE_MINUS_20_TEMP.sensor_endpoint_id in body
+
+    async def _is_l2_five_point_curve(self) -> bool:
+        body = await self._fetch_raw("settingsl2")
+        return L2FivePointCurve.CURVE_MINUS_20_TEMP.sensor_endpoint_id in body
 
     async def get_active_registries(self) -> OumanRegistrySet:
         """Get the list of active registries which contain the sets of
