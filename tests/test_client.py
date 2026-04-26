@@ -18,12 +18,16 @@ from ouman_eh_800_api.exceptions import (
     OumanClientError,
 )
 from ouman_eh_800_api.registry import (
-    L1Endpoints,
-    L1EndpointsWithRoomSensor,
+    L1BaseEndpoints,
     L1FivePointCurve,
-    L2Endpoints,
-    L2EndpointsWithRoomSensor,
+    L1NoRoomSensor,
+    L1RoomSensor,
+    L1ThreePointCurve,
+    L2BaseEndpoints,
     L2FivePointCurve,
+    L2NoRoomSensor,
+    L2RoomSensor,
+    L2ThreePointCurve,
     OumanRegistrySet,
     SystemEndpoints,
 )
@@ -311,7 +315,7 @@ async def test_update_values_non_404_error_raises(
 
 @pytest.mark.asyncio
 async def test_set_int_endpoint_success(client: OumanEh800Client, m: aioresponses):
-    endpoint = L1Endpoints.VALVE_POSITION_SETPOINT
+    endpoint = L1BaseEndpoints.VALVE_POSITION_SETPOINT
     m.get(
         re.compile(r".*/update\?S_92_85.*50.*"),
         body=f"update?{endpoint.sensor_endpoint_id}=50.0;\x00",
@@ -325,7 +329,7 @@ async def test_set_int_endpoint_success(client: OumanEh800Client, m: aioresponse
 
 @pytest.mark.asyncio
 async def test_set_int_endpoint_value_below_min_raises(client: OumanEh800Client):
-    endpoint = L1Endpoints.VALVE_POSITION_SETPOINT  # min_val=0, max_val=100
+    endpoint = L1BaseEndpoints.VALVE_POSITION_SETPOINT  # min_val=0, max_val=100
 
     with pytest.raises(ValueError) as exc_info:
         await client._set_int_endpoint(endpoint, -1)
@@ -335,7 +339,7 @@ async def test_set_int_endpoint_value_below_min_raises(client: OumanEh800Client)
 
 @pytest.mark.asyncio
 async def test_set_int_endpoint_value_above_max_raises(client: OumanEh800Client):
-    endpoint = L1Endpoints.VALVE_POSITION_SETPOINT  # min_val=0, max_val=100
+    endpoint = L1BaseEndpoints.VALVE_POSITION_SETPOINT  # min_val=0, max_val=100
 
     with pytest.raises(ValueError) as exc_info:
         await client._set_int_endpoint(endpoint, 101)
@@ -347,7 +351,7 @@ async def test_set_int_endpoint_value_above_max_raises(client: OumanEh800Client)
 async def test_set_int_endpoint_missing_response_raises(
     client: OumanEh800Client, m: aioresponses
 ):
-    endpoint = L1Endpoints.VALVE_POSITION_SETPOINT
+    endpoint = L1BaseEndpoints.VALVE_POSITION_SETPOINT
     m.get(
         re.compile(r".*/update\?S_92_85.*50.*"),
         body="update?some_other_id=50.0;\x00",
@@ -364,7 +368,7 @@ async def test_set_int_endpoint_missing_response_raises(
 async def test_set_int_endpoint_mismatched_value_raises(
     client: OumanEh800Client, m: aioresponses
 ):
-    endpoint = L1Endpoints.VALVE_POSITION_SETPOINT
+    endpoint = L1BaseEndpoints.VALVE_POSITION_SETPOINT
     m.get(
         re.compile(r".*/update\?S_92_85.*50.*"),
         body=f"update?{endpoint.sensor_endpoint_id}=99.0;\x00",  # Returns different value
@@ -384,7 +388,7 @@ async def test_set_int_endpoint_mismatched_value_raises(
 
 @pytest.mark.asyncio
 async def test_set_float_endpoint_success(client: OumanEh800Client, m: aioresponses):
-    endpoint = L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING
+    endpoint = L1NoRoomSensor.ROOM_TEMPERATURE_FINE_TUNING
     m.get(
         re.compile(r".*/update\?.*S_134_85.*1\.5.*"),
         body=f"update?{endpoint.sensor_endpoint_id}=1.5;\x00",
@@ -400,7 +404,7 @@ async def test_set_float_endpoint_success(client: OumanEh800Client, m: aiorespon
 async def test_set_float_endpoint_rounds_to_one_decimal(
     client: OumanEh800Client, m: aioresponses
 ):
-    endpoint = L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING
+    endpoint = L1NoRoomSensor.ROOM_TEMPERATURE_FINE_TUNING
     # Value 1.55 should be rounded to 1.6
     m.get(
         re.compile(r".*/update\?.*S_134_85.*1\.6.*"),
@@ -415,7 +419,7 @@ async def test_set_float_endpoint_rounds_to_one_decimal(
 
 @pytest.mark.asyncio
 async def test_set_float_endpoint_value_below_min_raises(client: OumanEh800Client):
-    endpoint = L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING  # min_val=-4.0, max_val=4.0
+    endpoint = L1NoRoomSensor.ROOM_TEMPERATURE_FINE_TUNING  # min_val=-4.0, max_val=4.0
 
     with pytest.raises(ValueError) as exc_info:
         await client._set_float_endpoint(endpoint, -5.0)
@@ -425,7 +429,7 @@ async def test_set_float_endpoint_value_below_min_raises(client: OumanEh800Clien
 
 @pytest.mark.asyncio
 async def test_set_float_endpoint_value_above_max_raises(client: OumanEh800Client):
-    endpoint = L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING  # min_val=-4.0, max_val=4.0
+    endpoint = L1NoRoomSensor.ROOM_TEMPERATURE_FINE_TUNING  # min_val=-4.0, max_val=4.0
 
     with pytest.raises(ValueError) as exc_info:
         await client._set_float_endpoint(endpoint, 5.0)
@@ -437,7 +441,7 @@ async def test_set_float_endpoint_value_above_max_raises(client: OumanEh800Clien
 async def test_set_float_endpoint_mismatched_value_raises(
     client: OumanEh800Client, m: aioresponses
 ):
-    endpoint = L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING
+    endpoint = L1NoRoomSensor.ROOM_TEMPERATURE_FINE_TUNING
     m.get(
         re.compile(r".*/update\?.*S_134_85.*1\.5.*"),
         body=f"update?{endpoint.sensor_endpoint_id}=2.5;\x00",  # Returns different value
@@ -457,7 +461,7 @@ async def test_set_float_endpoint_mismatched_value_raises(
 
 @pytest.mark.asyncio
 async def test_set_enum_endpoint_success(client: OumanEh800Client, m: aioresponses):
-    endpoint = L1Endpoints.OPERATION_MODE
+    endpoint = L1BaseEndpoints.OPERATION_MODE
     m.get(
         re.compile(r".*/update\?S_59_85.*0.*"),
         body="update?S_59_85=0;\x00",
@@ -471,7 +475,7 @@ async def test_set_enum_endpoint_success(client: OumanEh800Client, m: aiorespons
 
 @pytest.mark.asyncio
 async def test_set_enum_endpoint_wrong_type_raises(client: OumanEh800Client):
-    endpoint = L1Endpoints.OPERATION_MODE  # expects OperationMode
+    endpoint = L1BaseEndpoints.OPERATION_MODE  # expects OperationMode
 
     with pytest.raises(TypeError) as exc_info:
         await client._set_enum_endpoint(endpoint, HomeAwayControl.HOME)  # Wrong type
@@ -483,7 +487,7 @@ async def test_set_enum_endpoint_wrong_type_raises(client: OumanEh800Client):
 async def test_set_enum_endpoint_missing_response_raises(
     client: OumanEh800Client, m: aioresponses
 ):
-    endpoint = L1Endpoints.OPERATION_MODE
+    endpoint = L1BaseEndpoints.OPERATION_MODE
     m.get(
         re.compile(r".*/update\?S_59_85.*0.*"),
         body="update?some_other_id=0;\x00",
@@ -500,7 +504,7 @@ async def test_set_enum_endpoint_missing_response_raises(
 async def test_set_enum_endpoint_mismatched_value_raises(
     client: OumanEh800Client, m: aioresponses
 ):
-    endpoint = L1Endpoints.OPERATION_MODE
+    endpoint = L1BaseEndpoints.OPERATION_MODE
     m.get(
         re.compile(r".*/update\?S_59_85.*0.*"),
         body="update?S_59_85=1;\x00",  # Returns TEMPERATURE_DROP instead of AUTOMATIC
@@ -520,7 +524,7 @@ async def test_set_enum_endpoint_mismatched_value_raises(
 
 @pytest.mark.asyncio
 async def test_set_endpoint_value_int(client: OumanEh800Client, m: aioresponses):
-    endpoint = L1Endpoints.VALVE_POSITION_SETPOINT
+    endpoint = L1BaseEndpoints.VALVE_POSITION_SETPOINT
     m.get(
         re.compile(r".*/update\?S_92_85.*50.*"),
         body=f"update?{endpoint.sensor_endpoint_id}=50.0;\x00",
@@ -534,7 +538,7 @@ async def test_set_endpoint_value_int(client: OumanEh800Client, m: aioresponses)
 
 @pytest.mark.asyncio
 async def test_set_endpoint_value_float(client: OumanEh800Client, m: aioresponses):
-    endpoint = L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING
+    endpoint = L1NoRoomSensor.ROOM_TEMPERATURE_FINE_TUNING
     m.get(
         re.compile(r".*/update\?.*S_134_85.*1\.5.*"),
         body=f"update?{endpoint.sensor_endpoint_id}=1.5;\x00",
@@ -548,7 +552,7 @@ async def test_set_endpoint_value_float(client: OumanEh800Client, m: aioresponse
 
 @pytest.mark.asyncio
 async def test_set_endpoint_value_enum(client: OumanEh800Client, m: aioresponses):
-    endpoint = L1Endpoints.OPERATION_MODE
+    endpoint = L1BaseEndpoints.OPERATION_MODE
     m.get(
         re.compile(r".*/update\?S_59_85.*0.*"),
         body="update?S_59_85=0;\x00",
@@ -574,7 +578,7 @@ async def test_set_endpoint_value_non_controllable_raises(client: OumanEh800Clie
 async def test_set_endpoint_value_int_with_float_value_raises(
     client: OumanEh800Client,
 ):
-    endpoint = L1Endpoints.VALVE_POSITION_SETPOINT  # IntControlOumanEndpoint
+    endpoint = L1BaseEndpoints.VALVE_POSITION_SETPOINT  # IntControlOumanEndpoint
 
     with pytest.raises(ValueError) as exc_info:
         await client.set_endpoint_value(endpoint, 50.5)  # Non-integer float
@@ -584,7 +588,7 @@ async def test_set_endpoint_value_int_with_float_value_raises(
 
 @pytest.mark.asyncio
 async def test_set_endpoint_value_int_with_wrong_type_raises(client: OumanEh800Client):
-    endpoint = L1Endpoints.VALVE_POSITION_SETPOINT
+    endpoint = L1BaseEndpoints.VALVE_POSITION_SETPOINT
 
     with pytest.raises(TypeError) as exc_info:
         await client.set_endpoint_value(endpoint, "50")  # String instead of int
@@ -594,7 +598,7 @@ async def test_set_endpoint_value_int_with_wrong_type_raises(client: OumanEh800C
 
 @pytest.mark.asyncio
 async def test_set_endpoint_value_enum_with_wrong_type_raises(client: OumanEh800Client):
-    endpoint = L1Endpoints.OPERATION_MODE
+    endpoint = L1BaseEndpoints.OPERATION_MODE
 
     with pytest.raises(TypeError) as exc_info:
         await client.set_endpoint_value(endpoint, 0)  # int instead of ControlEnum
@@ -689,7 +693,7 @@ async def test_get_is_l2_installed_false(client: OumanEh800Client, m: aiorespons
 async def test_get_is_room_sensor_installed_true(
     client: OumanEh800Client, m: aioresponses
 ):
-    endpoint_id = L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
+    endpoint_id = L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
     m.get(
         f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=on;\x00",  # Non-"off" means installed
@@ -705,7 +709,7 @@ async def test_get_is_room_sensor_installed_true(
 async def test_get_is_room_sensor_installed_false(
     client: OumanEh800Client, m: aioresponses
 ):
-    endpoint_id = L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
+    endpoint_id = L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
     m.get(
         f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=off;\x00",
@@ -721,7 +725,7 @@ async def test_get_is_room_sensor_installed_false(
 async def test_get_is_room_sensor_installed_on_with_error(
     client: OumanEh800Client, m: aioresponses
 ):
-    endpoint_id = L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
+    endpoint_id = L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
     m.get(
         f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=on,error;\x00",
@@ -737,7 +741,7 @@ async def test_get_is_room_sensor_installed_on_with_error(
 async def test_get_is_room_sensor_installed_off_with_error(
     client: OumanEh800Client, m: aioresponses
 ):
-    endpoint_id = L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
+    endpoint_id = L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
     m.get(
         f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=off,error;\x00",
@@ -753,7 +757,7 @@ async def test_get_is_room_sensor_installed_off_with_error(
 async def test_get_is_l1_room_sensor_installed(
     client: OumanEh800Client, m: aioresponses
 ):
-    endpoint_id = L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
+    endpoint_id = L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
     m.get(
         f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=off;\x00",
@@ -769,7 +773,7 @@ async def test_get_is_l1_room_sensor_installed(
 async def test_get_is_l2_room_sensor_installed(
     client: OumanEh800Client, m: aioresponses
 ):
-    endpoint_id = L2Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
+    endpoint_id = L2BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
     m.get(
         f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=off;\x00",
@@ -837,132 +841,108 @@ async def test_is_l2_five_point_curve_false(client: OumanEh800Client, m: aioresp
 # =============================================================================
 
 
-@pytest.mark.asyncio
-async def test_get_active_registries_l1_only_no_room_sensor(
-    client: OumanEh800Client, m: aioresponses
-):
-    l1_sensor_id = L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
-    l2_installed_id = SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id
-
-    # L1 room sensor: off
+def _mock_request(m: aioresponses, sensor_id: str, value: str) -> None:
     m.get(
-        f"{MOCK_ADDRESS}/request?{l1_sensor_id}%253B{MOCK_DATE_PARAM}",
-        body=f"request?{l1_sensor_id}=off;\x00",
-        status=200,
-    )
-    # L2 not installed
-    m.get(
-        f"{MOCK_ADDRESS}/request?{l2_installed_id}%253B{MOCK_DATE_PARAM}",
-        body=f"request?{l2_installed_id}=0;\x00",
+        f"{MOCK_ADDRESS}/request?{sensor_id}%253B{MOCK_DATE_PARAM}",
+        body=f"request?{sensor_id}={value};\x00",
         status=200,
     )
 
-    result = await client.get_active_registries()
 
-    assert SystemEndpoints in result.registries
-    assert L1Endpoints in result.registries
-    assert L1EndpointsWithRoomSensor not in result.registries
-    assert L2Endpoints not in result.registries
+def _mock_settings(m: aioresponses, name: str, body: str) -> None:
+    m.get(
+        f"{MOCK_ADDRESS}/{name}?{MOCK_DATE_PARAM}",
+        body=f"{name}?{body}\x00",
+        status=200,
+    )
+
+
+_THREE_POINT_L1_BODY = "-20,S_61_85;0,S_63_85;20,S_65_85;"
+_FIVE_POINT_L1_BODY = "-20,S_67_85;-10,S_69_85;0,S_71_85;10,S_73_85;20,S_75_85;"
+_THREE_POINT_L2_BODY = "-20,S_148_85;0,S_150_85;20,S_152_85;"
+_FIVE_POINT_L2_BODY = "-20,S_154_85;-10,S_156_85;0,S_158_85;10,S_160_85;20,S_162_85;"
 
 
 @pytest.mark.asyncio
-async def test_get_active_registries_l1_with_room_sensor(
+async def test_get_active_registries_l1_only_no_room_sensor_three_point(
     client: OumanEh800Client, m: aioresponses
 ):
-    l1_sensor_id = L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
-    l2_installed_id = SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id
-
-    # L1 room sensor: installed
-    m.get(
-        f"{MOCK_ADDRESS}/request?{l1_sensor_id}%253B{MOCK_DATE_PARAM}",
-        body=f"request?{l1_sensor_id}=on;\x00",
-        status=200,
-    )
-    # L2 not installed
-    m.get(
-        f"{MOCK_ADDRESS}/request?{l2_installed_id}%253B{MOCK_DATE_PARAM}",
-        body=f"request?{l2_installed_id}=0;\x00",
-        status=200,
-    )
+    _mock_settings(m, "settingsl1", _THREE_POINT_L1_BODY)
+    _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "off")
+    _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "0")
 
     result = await client.get_active_registries()
 
-    assert SystemEndpoints in result.registries
-    assert L1EndpointsWithRoomSensor in result.registries
-    assert L1Endpoints not in result.registries
-    assert L2Endpoints not in result.registries
+    assert set(result.registries) == {
+        SystemEndpoints,
+        L1BaseEndpoints,
+        L1ThreePointCurve,
+        L1NoRoomSensor,
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_active_registries_l1_with_room_sensor_five_point(
+    client: OumanEh800Client, m: aioresponses
+):
+    _mock_settings(m, "settingsl1", _FIVE_POINT_L1_BODY)
+    _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "on")
+    _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "0")
+
+    result = await client.get_active_registries()
+
+    assert set(result.registries) == {
+        SystemEndpoints,
+        L1BaseEndpoints,
+        L1FivePointCurve,
+        L1RoomSensor,
+    }
 
 
 @pytest.mark.asyncio
 async def test_get_active_registries_l1_and_l2_no_room_sensors(
     client: OumanEh800Client, m: aioresponses
 ):
-    l1_sensor_id = L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
-    l2_installed_id = SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id
-    l2_sensor_id = L2Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
-
-    # L1 room sensor: off
-    m.get(
-        f"{MOCK_ADDRESS}/request?{l1_sensor_id}%253B{MOCK_DATE_PARAM}",
-        body=f"request?{l1_sensor_id}=off;\x00",
-        status=200,
-    )
-    # L2 installed
-    m.get(
-        f"{MOCK_ADDRESS}/request?{l2_installed_id}%253B{MOCK_DATE_PARAM}",
-        body=f"request?{l2_installed_id}=1;\x00",
-        status=200,
-    )
-    # L2 room sensor: off
-    m.get(
-        f"{MOCK_ADDRESS}/request?{l2_sensor_id}%253B{MOCK_DATE_PARAM}",
-        body=f"request?{l2_sensor_id}=off;\x00",
-        status=200,
-    )
+    _mock_settings(m, "settingsl1", _THREE_POINT_L1_BODY)
+    _mock_settings(m, "settingsl2", _THREE_POINT_L2_BODY)
+    _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "off")
+    _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "1")
+    _mock_request(m, L2BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "off")
 
     result = await client.get_active_registries()
 
-    assert SystemEndpoints in result.registries
-    assert L1Endpoints in result.registries
-    assert L2Endpoints in result.registries
-    assert L1EndpointsWithRoomSensor not in result.registries
-    assert L2EndpointsWithRoomSensor not in result.registries
+    assert set(result.registries) == {
+        SystemEndpoints,
+        L1BaseEndpoints,
+        L1ThreePointCurve,
+        L1NoRoomSensor,
+        L2BaseEndpoints,
+        L2ThreePointCurve,
+        L2NoRoomSensor,
+    }
 
 
 @pytest.mark.asyncio
 async def test_get_active_registries_all_with_room_sensors(
     client: OumanEh800Client, m: aioresponses
 ):
-    l1_sensor_id = L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
-    l2_installed_id = SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id
-    l2_sensor_id = L2Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
-
-    # L1 room sensor: on
-    m.get(
-        f"{MOCK_ADDRESS}/request?{l1_sensor_id}%253B{MOCK_DATE_PARAM}",
-        body=f"request?{l1_sensor_id}=on;\x00",
-        status=200,
-    )
-    # L2 installed
-    m.get(
-        f"{MOCK_ADDRESS}/request?{l2_installed_id}%253B{MOCK_DATE_PARAM}",
-        body=f"request?{l2_installed_id}=1;\x00",
-        status=200,
-    )
-    # L2 room sensor: on
-    m.get(
-        f"{MOCK_ADDRESS}/request?{l2_sensor_id}%253B{MOCK_DATE_PARAM}",
-        body=f"request?{l2_sensor_id}=on;\x00",
-        status=200,
-    )
+    _mock_settings(m, "settingsl1", _FIVE_POINT_L1_BODY)
+    _mock_settings(m, "settingsl2", _FIVE_POINT_L2_BODY)
+    _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "on")
+    _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "1")
+    _mock_request(m, L2BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "on")
 
     result = await client.get_active_registries()
 
-    assert SystemEndpoints in result.registries
-    assert L1EndpointsWithRoomSensor in result.registries
-    assert L2EndpointsWithRoomSensor in result.registries
-    assert L1Endpoints not in result.registries
-    assert L2Endpoints not in result.registries
+    assert set(result.registries) == {
+        SystemEndpoints,
+        L1BaseEndpoints,
+        L1FivePointCurve,
+        L1RoomSensor,
+        L2BaseEndpoints,
+        L2FivePointCurve,
+        L2RoomSensor,
+    }
 
 
 # =============================================================================

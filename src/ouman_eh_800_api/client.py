@@ -22,12 +22,16 @@ from .exceptions import (
     OumanClientError,
 )
 from .registry import (
-    L1Endpoints,
-    L1EndpointsWithRoomSensor,
+    L1BaseEndpoints,
     L1FivePointCurve,
-    L2Endpoints,
-    L2EndpointsWithRoomSensor,
+    L1NoRoomSensor,
+    L1RoomSensor,
+    L1ThreePointCurve,
+    L2BaseEndpoints,
     L2FivePointCurve,
+    L2NoRoomSensor,
+    L2RoomSensor,
+    L2ThreePointCurve,
     OumanRegistry,
     OumanRegistrySet,
     SystemEndpoints,
@@ -378,7 +382,7 @@ class OumanEh800Client:
             True if a room sensor is installed, False otherwise.
         """
         return await self._get_is_room_sensor_installed(
-            L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
+            L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
         )
 
     async def get_is_l2_room_sensor_installed(self) -> bool:
@@ -388,7 +392,7 @@ class OumanEh800Client:
             True if a room sensor is installed, False otherwise.
         """
         return await self._get_is_room_sensor_installed(
-            L2Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
+            L2BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
         )
 
     async def _is_l1_five_point_curve(self) -> bool:
@@ -405,16 +409,29 @@ class OumanEh800Client:
     async def get_active_registries(self) -> OumanRegistrySet:
         """Get the list of active registries which contain the sets of
         endpoints that can currently be read and written to."""
-        registries: list[type[OumanRegistry]] = [SystemEndpoints]
-        if await self.get_is_l1_room_sensor_installed():
-            registries.append(L1EndpointsWithRoomSensor)
+        registries: list[type[OumanRegistry]] = [SystemEndpoints, L1BaseEndpoints]
+
+        if await self._is_l1_five_point_curve():
+            registries.append(L1FivePointCurve)
         else:
-            registries.append(L1Endpoints)
+            registries.append(L1ThreePointCurve)
+
+        if await self.get_is_l1_room_sensor_installed():
+            registries.append(L1RoomSensor)
+        else:
+            registries.append(L1NoRoomSensor)
+
         if await self.get_is_l2_installed():
-            if await self.get_is_l2_room_sensor_installed():
-                registries.append(L2EndpointsWithRoomSensor)
+            registries.append(L2BaseEndpoints)
+            if await self._is_l2_five_point_curve():
+                registries.append(L2FivePointCurve)
             else:
-                registries.append(L2Endpoints)
+                registries.append(L2ThreePointCurve)
+            if await self.get_is_l2_room_sensor_installed():
+                registries.append(L2RoomSensor)
+            else:
+                registries.append(L2NoRoomSensor)
+
         return OumanRegistrySet(registries)
 
     async def get_alarms(self) -> Mapping[str, str]:
