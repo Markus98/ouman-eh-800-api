@@ -716,6 +716,38 @@ async def test_get_is_room_sensor_installed_false(
 
 
 @pytest.mark.asyncio
+async def test_get_is_room_sensor_installed_on_with_error(
+    client: OumanEh800Client, m: aioresponses
+):
+    endpoint_id = L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
+    m.get(
+        f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
+        body=f"request?{endpoint_id}=on,error;\x00",
+        status=200,
+    )
+
+    result = await client._get_is_room_sensor_installed(endpoint_id)
+
+    assert result is True
+
+
+@pytest.mark.asyncio
+async def test_get_is_room_sensor_installed_off_with_error(
+    client: OumanEh800Client, m: aioresponses
+):
+    endpoint_id = L1Endpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
+    m.get(
+        f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
+        body=f"request?{endpoint_id}=off,error;\x00",
+        status=200,
+    )
+
+    result = await client._get_is_room_sensor_installed(endpoint_id)
+
+    assert result is False
+
+
+@pytest.mark.asyncio
 async def test_get_is_l1_room_sensor_installed(
     client: OumanEh800Client, m: aioresponses
 ):

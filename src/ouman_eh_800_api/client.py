@@ -732,12 +732,11 @@ class OumanEh800Client:
         if value is None:
             raise ValueError("Response value should be defined")
 
-        # FIXME:
-        # This is a temporary solution. It hasn't been tested what the
-        # endpoint returns when a room sensor is installed, so now we
-        # just assume that when the value differs from the falsy value,
-        # it is means it is truthy and a room sensor is installed.
-        return value != "off"
+        # The device may return composite values like "on,error" (sensor
+        # configured but reporting fault) or "off,error" (channel disabled
+        # with error flag retained). Only the prefix indicates whether a
+        # sensor is configured.
+        return value.split(",")[0] == "on"
 
     async def get_is_l1_room_sensor_installed(self) -> bool:
         """Check if a room sensor is installed for the L1 heating circuit.
