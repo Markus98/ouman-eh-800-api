@@ -118,8 +118,8 @@ class SystemEndpoints(OumanRegistry):
     )
 
 
-class L1Endpoints(OumanRegistry):
-    """Endpoints for the L1 (primary) heating circuit."""
+class L1BaseEndpoints(OumanRegistry):
+    """L1 endpoints that are always queryable regardless of configuration."""
 
     OPERATION_MODE = EnumControlOumanEndpoint(
         name="l1_operation_mode",
@@ -139,60 +139,6 @@ class L1Endpoints(OumanRegistry):
         max_val=100,
     )
 
-    CURVE_MINUS_20_TEMP = IntControlOumanEndpoint(
-        name="l1_curve_minus_20_temperature",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_61_85",
-        control_endpoint_id="@_S_61_85",
-        min_val=0,
-        max_val=99,
-    )
-
-    CURVE_0_TEMP = IntControlOumanEndpoint(
-        name="l1_curve_0_temperature",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_63_85",
-        control_endpoint_id="@_S_63_85",
-        min_val=0,
-        max_val=99,
-    )
-
-    CURVE_20_TEMP = IntControlOumanEndpoint(
-        name="l1_curve_20_temperature",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_65_85",
-        control_endpoint_id="@_S_65_85",
-        min_val=0,
-        max_val=99,
-    )
-
-    TEMPERATURE_DROP = IntControlOumanEndpoint(
-        name="l1_temperature_drop",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_89_85",
-        control_endpoint_id="@_S_89_85",
-        min_val=0,
-        max_val=90,
-    )
-
-    BIG_TEMPERATURE_DROP = IntControlOumanEndpoint(
-        name="l1_big_temperature_drop",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_90_85",
-        control_endpoint_id="@_S_90_85",
-        min_val=0,
-        max_val=90,
-    )
-
-    CONSTANT_TEMP_SETPOINT = IntControlOumanEndpoint(
-        name="l1_constant_temp_setpoint",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_127_85",
-        control_endpoint_id="@_S_127_85",
-        min_val=0,
-        max_val=95,
-    )
-
     WATER_OUT_MIN_TEMP = IntControlOumanEndpoint(
         name="l1_water_out_minimum_temperature",
         unit=OumanUnit.CELSIUS,
@@ -209,15 +155,6 @@ class L1Endpoints(OumanRegistry):
         control_endpoint_id="@_S_55_85",
         min_val=5,
         max_val=95,
-    )
-
-    ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
-        name="l1_room_temperature_fine_tuning",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_134_85",
-        control_endpoint_id="@_S_134_85",
-        min_val=-4.0,
-        max_val=4.0,
     )
 
     TEMPERATURE_LEVEL_STATUS_TEXT = OumanEndpoint(
@@ -269,91 +206,46 @@ class L1Endpoints(OumanRegistry):
     )
 
 
-class L1EndpointsWithRoomSensor(L1Endpoints):
-    """Endpoints for L1 heating circuit with a room sensor installed.
+class L1ThreePointCurve(OumanRegistry):
+    """L1 3-point heating curve setpoints.
 
-    Extends L1Endpoints with additional room sensor endpoints and overrides:
-    - TEMPERATURE_DROP / BIG_TEMPERATURE_DROP point at the room-temperature
-      drop IDs (S_87_85 / S_88_85). The shared `name` is intentional — the
-      device UI labels both as "Lämmönpudotus" with a parenthetical mode
-      qualifier; only the underlying axis differs (supply-water-°C drop
-      without sensor, room-temp-°C drop with sensor). Value scales differ.
-    - ROOM_TEMPERATURE_FINE_TUNING points at the room-mode control endpoint.
+    Mutually exclusive with L1FivePointCurve. Endpoints intentionally share
+    `name` with the 5-point counterparts where they overlap (-20, 0, +20).
     """
 
-    # NOTE: Override of L1Endpoints.TEMPERATURE_DROP. With a room sensor the
-    # device exposes the drop as a direct room-temp drop on a different ID.
-    TEMPERATURE_DROP = IntControlOumanEndpoint(
-        name="l1_temperature_drop",
+    CURVE_MINUS_20_TEMP = IntControlOumanEndpoint(
+        name="l1_curve_minus_20_temperature",
         unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_87_85",
-        control_endpoint_id="@_S_87_85",
+        sensor_endpoint_id="S_61_85",
+        control_endpoint_id="@_S_61_85",
         min_val=0,
-        max_val=90,
+        max_val=99,
     )
 
-    # NOTE: Override of L1Endpoints.BIG_TEMPERATURE_DROP. Same rationale as
-    # TEMPERATURE_DROP above.
-    BIG_TEMPERATURE_DROP = IntControlOumanEndpoint(
-        name="l1_big_temperature_drop",
+    CURVE_0_TEMP = IntControlOumanEndpoint(
+        name="l1_curve_0_temperature",
         unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_88_85",
-        control_endpoint_id="@_S_88_85",
+        sensor_endpoint_id="S_63_85",
+        control_endpoint_id="@_S_63_85",
         min_val=0,
-        max_val=90,
+        max_val=99,
     )
 
-    ROOM_TEMPERATURE_SETPOINT_USER = IntControlOumanEndpoint(
-        name="l1_room_temperature_setpoint_user",
+    CURVE_20_TEMP = IntControlOumanEndpoint(
+        name="l1_curve_20_temperature",
         unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_81_85",
-        control_endpoint_id="@_S_81_85",
-        min_val=5,
-        max_val=50,
-    )
-
-    ROOM_SENSOR_POTENTIOMETER = NumberOumanEndpoint(
-        name="l1_room_sensor_potentiometer",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_274_85",
-    )
-
-    ROOM_TEMPERATURE = NumberOumanEndpoint(
-        name="l1_room_temperature",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_261_85",
-    )
-
-    DELAYED_ROOM_TEMPERATURE = NumberOumanEndpoint(
-        name="l1_delayed_room_temperature",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_262_85",
-    )
-
-    ROOM_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
-        name="l1_room_temperature_setpoint",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_278_85",
-    )
-
-    # NOTE: This overrides the one in L1Endpoints since the control
-    # endpoint is different when a room sensor is installed.
-    ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
-        name="l1_room_temperature_fine_tuning",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_102_85",
-        control_endpoint_id="@_S_102_85",
-        min_val=-4.0,
-        max_val=4.0,
+        sensor_endpoint_id="S_65_85",
+        control_endpoint_id="@_S_65_85",
+        min_val=0,
+        max_val=99,
     )
 
 
 class L1FivePointCurve(OumanRegistry):
     """L1 5-point heating curve setpoints.
 
-    Mutually exclusive with the 3-point curve endpoints in L1Endpoints
-    (CURVE_MINUS_20_TEMP, CURVE_0_TEMP, CURVE_20_TEMP). The device exposes
-    one set or the other based on Heating curve type setting (manual p.30).
+    Mutually exclusive with L1ThreePointCurve. The device exposes one set
+    or the other based on the Heating curve type setting (manual p.30).
     Endpoints intentionally share `name` with their 3-point counterparts
     where they overlap (-20, 0, +20).
     """
@@ -404,10 +296,132 @@ class L1FivePointCurve(OumanRegistry):
     )
 
 
-class L2Endpoints(OumanRegistry):
-    """Endpoints for the L2 (secondary) heating circuit.
+class L1NoRoomSensor(OumanRegistry):
+    """L1 endpoints exposed when no room sensor is installed.
 
-    Note: The endpoints in this registry have not been verified.
+    Mutually exclusive with L1RoomSensor. Endpoints intentionally share
+    `name` with their L1RoomSensor counterparts where they overlap
+    (TEMPERATURE_DROP, BIG_TEMPERATURE_DROP, ROOM_TEMPERATURE_FINE_TUNING)
+    — the user-facing setting is conceptually the same; only the
+    underlying control axis differs (supply-water-°C drop without a
+    sensor, room-temp-°C drop with one).
+    """
+
+    TEMPERATURE_DROP = IntControlOumanEndpoint(
+        name="l1_temperature_drop",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_89_85",
+        control_endpoint_id="@_S_89_85",
+        min_val=0,
+        max_val=90,
+    )
+
+    BIG_TEMPERATURE_DROP = IntControlOumanEndpoint(
+        name="l1_big_temperature_drop",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_90_85",
+        control_endpoint_id="@_S_90_85",
+        min_val=0,
+        max_val=90,
+    )
+
+    ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
+        name="l1_room_temperature_fine_tuning",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_134_85",
+        control_endpoint_id="@_S_134_85",
+        min_val=-4.0,
+        max_val=4.0,
+    )
+
+
+class L1RoomSensor(OumanRegistry):
+    """L1 endpoints exposed when a room sensor is installed.
+
+    Mutually exclusive with L1NoRoomSensor.
+    """
+
+    TEMPERATURE_DROP = IntControlOumanEndpoint(
+        name="l1_temperature_drop",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_87_85",
+        control_endpoint_id="@_S_87_85",
+        min_val=0,
+        max_val=90,
+    )
+
+    BIG_TEMPERATURE_DROP = IntControlOumanEndpoint(
+        name="l1_big_temperature_drop",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_88_85",
+        control_endpoint_id="@_S_88_85",
+        min_val=0,
+        max_val=90,
+    )
+
+    ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
+        name="l1_room_temperature_fine_tuning",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_102_85",
+        control_endpoint_id="@_S_102_85",
+        min_val=-4.0,
+        max_val=4.0,
+    )
+
+    ROOM_TEMPERATURE_SETPOINT_USER = IntControlOumanEndpoint(
+        name="l1_room_temperature_setpoint_user",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_81_85",
+        control_endpoint_id="@_S_81_85",
+        min_val=5,
+        max_val=50,
+    )
+
+    ROOM_SENSOR_POTENTIOMETER = NumberOumanEndpoint(
+        name="l1_room_sensor_potentiometer",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_274_85",
+    )
+
+    ROOM_TEMPERATURE = NumberOumanEndpoint(
+        name="l1_room_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_261_85",
+    )
+
+    DELAYED_ROOM_TEMPERATURE = NumberOumanEndpoint(
+        name="l1_delayed_room_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_262_85",
+    )
+
+    ROOM_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
+        name="l1_room_temperature_setpoint",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_278_85",
+    )
+
+
+class L1ConstantTempMode(OumanRegistry):
+    """L1 endpoints exposed when the heating mode is constant temperature
+    controller (manual p.27-28). Additive on top of L1BaseEndpoints; not
+    auto-detected — caller opt-in via OumanRegistrySet composition."""
+
+    CONSTANT_TEMP_SETPOINT = IntControlOumanEndpoint(
+        name="l1_constant_temp_setpoint",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_127_85",
+        control_endpoint_id="@_S_127_85",
+        min_val=0,
+        max_val=95,
+    )
+
+
+class L2BaseEndpoints(OumanRegistry):
+    """L2 endpoints that are always queryable when L2 is enabled.
+
+    Note: The endpoints in this registry have not been verified against
+    a device with L2 hardware installed.
     """
 
     OPERATION_MODE = EnumControlOumanEndpoint(
@@ -428,51 +442,6 @@ class L2Endpoints(OumanRegistry):
         max_val=100,
     )
 
-    CURVE_MINUS_20_TEMP = IntControlOumanEndpoint(
-        name="l2_curve_minus_20_temperature",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_148_85",
-        control_endpoint_id="@_S_148_85",
-        min_val=0,
-        max_val=99,
-    )
-
-    CURVE_0_TEMP = IntControlOumanEndpoint(
-        name="l2_curve_0_temperature",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_150_85",
-        control_endpoint_id="@_S_150_85",
-        min_val=0,
-        max_val=99,
-    )
-
-    CURVE_20_TEMP = IntControlOumanEndpoint(
-        name="l2_curve_20_temperature",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_152_85",
-        control_endpoint_id="@_S_152_85",
-        min_val=0,
-        max_val=99,
-    )
-
-    TEMPERATURE_DROP = IntControlOumanEndpoint(
-        name="l2_temperature_drop",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_176_85",
-        control_endpoint_id="@_S_176_85",
-        min_val=0,
-        max_val=90,
-    )
-
-    BIG_TEMPERATURE_DROP = IntControlOumanEndpoint(
-        name="l2_big_temperature_drop",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_177_85",
-        control_endpoint_id="@_S_177_85",
-        min_val=0,
-        max_val=90,
-    )
-
     WATER_OUT_MIN_TEMP = IntControlOumanEndpoint(
         name="l2_water_out_minimum_temperature",
         unit=OumanUnit.CELSIUS,
@@ -489,15 +458,6 @@ class L2Endpoints(OumanRegistry):
         control_endpoint_id="@_S_142_85",
         min_val=5,
         max_val=95,
-    )
-
-    ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
-        name="l2_room_temperature_fine_tuning",
-        unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_221_85",
-        control_endpoint_id="@_S_221_85",
-        min_val=-4.0,
-        max_val=4.0,
     )
 
     TEMPERATURE_LEVEL_STATUS_TEXT = OumanEndpoint(
@@ -542,8 +502,6 @@ class L2Endpoints(OumanRegistry):
         sensor_endpoint_id="S_310_85",
     )
 
-    # TODO: make this into an enum endpoint when we know what other
-    # values are possible besides "off"
     ROOM_SENSOR_INSTALLED = OumanEndpoint(
         name="l2_room_sensor_installed",
         unit=None,
@@ -551,47 +509,45 @@ class L2Endpoints(OumanRegistry):
     )
 
 
-class L2EndpointsWithRoomSensor(L2Endpoints):
-    """Endpoints for L2 heating circuit with a room sensor installed.
+class L2ThreePointCurve(OumanRegistry):
+    """L2 3-point heating curve setpoints.
 
-    Note: The endpoints in this registry have not been verified.
-
-    Extends L2Endpoints with additional room sensor endpoints and
-    overrides ROOM_TEMPERATURE_FINE_TUNING with the correct control endpoint.
+    Mutually exclusive with L2FivePointCurve. Shares `name` with the
+    5-point counterparts where they overlap (-20, 0, +20).
     """
 
-    ROOM_TEMPERATURE = NumberOumanEndpoint(
-        name="l2_room_temperature",
+    CURVE_MINUS_20_TEMP = IntControlOumanEndpoint(
+        name="l2_curve_minus_20_temperature",
         unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_295_85",
+        sensor_endpoint_id="S_148_85",
+        control_endpoint_id="@_S_148_85",
+        min_val=0,
+        max_val=99,
     )
 
-    ROOM_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
-        name="l2_room_temperature_setpoint",
+    CURVE_0_TEMP = IntControlOumanEndpoint(
+        name="l2_curve_0_temperature",
         unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_313_85",
+        sensor_endpoint_id="S_150_85",
+        control_endpoint_id="@_S_150_85",
+        min_val=0,
+        max_val=99,
     )
 
-    # NOTE: This overrides the one in L2Endpoints since the control
-    # endpoint is different when a room sensor is installed.
-    ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
-        name="l2_room_temperature_fine_tuning",
+    CURVE_20_TEMP = IntControlOumanEndpoint(
+        name="l2_curve_20_temperature",
         unit=OumanUnit.CELSIUS,
-        sensor_endpoint_id="S_189_85",
-        control_endpoint_id="@_S_189_85",
-        min_val=-4.0,
-        max_val=4.0,
+        sensor_endpoint_id="S_152_85",
+        control_endpoint_id="@_S_152_85",
+        min_val=0,
+        max_val=99,
     )
 
 
 class L2FivePointCurve(OumanRegistry):
     """L2 5-point heating curve setpoints.
 
-    Mutually exclusive with the 3-point curve endpoints in L2Endpoints
-    (CURVE_MINUS_20_TEMP, CURVE_0_TEMP, CURVE_20_TEMP). The device exposes
-    one set or the other based on Heating curve type setting (manual p.30).
-    Endpoints intentionally share `name` with their 3-point counterparts
-    where they overlap (-20, 0, +20).
+    Mutually exclusive with L2ThreePointCurve.
     """
 
     CURVE_MINUS_20_TEMP = IntControlOumanEndpoint(
@@ -637,4 +593,71 @@ class L2FivePointCurve(OumanRegistry):
         control_endpoint_id="@_S_162_85",
         min_val=0,
         max_val=99,
+    )
+
+
+class L2NoRoomSensor(OumanRegistry):
+    """L2 endpoints exposed when no room sensor is installed.
+
+    Mutually exclusive with L2RoomSensor.
+    """
+
+    TEMPERATURE_DROP = IntControlOumanEndpoint(
+        name="l2_temperature_drop",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_176_85",
+        control_endpoint_id="@_S_176_85",
+        min_val=0,
+        max_val=90,
+    )
+
+    BIG_TEMPERATURE_DROP = IntControlOumanEndpoint(
+        name="l2_big_temperature_drop",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_177_85",
+        control_endpoint_id="@_S_177_85",
+        min_val=0,
+        max_val=90,
+    )
+
+    ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
+        name="l2_room_temperature_fine_tuning",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_221_85",
+        control_endpoint_id="@_S_221_85",
+        min_val=-4.0,
+        max_val=4.0,
+    )
+
+
+class L2RoomSensor(OumanRegistry):
+    """L2 endpoints exposed when a room sensor is installed.
+
+    Mutually exclusive with L2NoRoomSensor.
+
+    Note: The TEMPERATURE_DROP / BIG_TEMPERATURE_DROP / DELAYED_ROOM_TEMPERATURE
+    / ROOM_TEMPERATURE_SETPOINT_USER variants for L2 with a room sensor have
+    not been captured against real hardware (no L2 hardware available to the
+    developer); add them here once the IDs are known.
+    """
+
+    ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
+        name="l2_room_temperature_fine_tuning",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_189_85",
+        control_endpoint_id="@_S_189_85",
+        min_val=-4.0,
+        max_val=4.0,
+    )
+
+    ROOM_TEMPERATURE = NumberOumanEndpoint(
+        name="l2_room_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_295_85",
+    )
+
+    ROOM_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
+        name="l2_room_temperature_setpoint",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_313_85",
     )

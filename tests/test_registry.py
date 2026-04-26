@@ -3,10 +3,10 @@ import pytest
 from ouman_eh_800_api.const import OumanUnit
 from ouman_eh_800_api.endpoint import NumberOumanEndpoint
 from ouman_eh_800_api.registry import (
-    L1Endpoints,
-    L1EndpointsWithRoomSensor,
-    L2Endpoints,
-    L2EndpointsWithRoomSensor,
+    L1BaseEndpoints,
+    L1NoRoomSensor,
+    L1RoomSensor,
+    L2BaseEndpoints,
     OumanRegistry,
     OumanRegistrySet,
     SystemEndpoints,
@@ -162,36 +162,20 @@ def test_registry_set_get_endpoint_by_sensor_id_not_found():
 # =============================================================================
 
 
-def test_registry_set_system_and_l1():
-    """SystemEndpoints and L1Endpoints should not conflict."""
-    registry_set = OumanRegistrySet([SystemEndpoints, L1Endpoints])
+def test_registry_set_system_and_l1_base():
+    """SystemEndpoints and L1BaseEndpoints should not conflict."""
+    registry_set = OumanRegistrySet([SystemEndpoints, L1BaseEndpoints])
 
     assert len(registry_set.endpoints) > 0
     assert SystemEndpoints.OUTSIDE_TEMPERATURE in registry_set.endpoints
-    assert L1Endpoints.OPERATION_MODE in registry_set.endpoints
+    assert L1BaseEndpoints.OPERATION_MODE in registry_set.endpoints
 
 
-def test_registry_set_l1_and_l2():
-    """L1Endpoints and L2Endpoints should not conflict."""
-    registry_set = OumanRegistrySet([L1Endpoints, L2Endpoints])
+def test_registry_set_l1_and_l2_bases():
+    """L1BaseEndpoints and L2BaseEndpoints should not conflict."""
+    registry_set = OumanRegistrySet([L1BaseEndpoints, L2BaseEndpoints])
 
     assert len(registry_set.endpoints) > 0
-
-
-def test_registry_set_l1_and_l1_with_room_sensor_raises():
-    """L1Endpoints and L1EndpointsWithRoomSensor should conflict due to shared endpoints."""
-    with pytest.raises(ValueError) as exc_info:
-        OumanRegistrySet([L1Endpoints, L1EndpointsWithRoomSensor])
-
-    assert "Conflicting endpoint IDs" in str(exc_info.value)
-
-
-def test_registry_set_l2_and_l2_with_room_sensor_raises():
-    """L2Endpoints and L2EndpointsWithRoomSensor should conflict due to shared endpoints."""
-    with pytest.raises(ValueError) as exc_info:
-        OumanRegistrySet([L2Endpoints, L2EndpointsWithRoomSensor])
-
-    assert "Conflicting endpoint IDs" in str(exc_info.value)
 
 
 # =============================================================================
@@ -231,33 +215,25 @@ def test_iterate_endpoints_child_overrides_parent_endpoint():
     assert endpoint_1.sensor_endpoint_id == "S_TEST_1_OVERRIDE"
 
 
-def test_iterate_endpoints_real_l1_with_room_sensor_override():
-    """L1EndpointsWithRoomSensor should override ROOM_TEMPERATURE_FINE_TUNING."""
-    endpoints = list(L1EndpointsWithRoomSensor.iterate_endpoints())
-    endpoint_names = [e.name for e in endpoints]
+def test_l1_no_room_sensor_and_room_sensor_share_drop_names():
+    """L1NoRoomSensor and L1RoomSensor define endpoints with the same `name`
+    but different sensor IDs (TEMPERATURE_DROP, BIG_TEMPERATURE_DROP,
+    ROOM_TEMPERATURE_FINE_TUNING). The shared name is intentional — the
+    user-facing setting is conceptually one thing per circuit."""
+    no_sensor_drop = L1NoRoomSensor.TEMPERATURE_DROP
+    room_sensor_drop = L1RoomSensor.TEMPERATURE_DROP
 
-    # Should only have one ROOM_TEMPERATURE_FINE_TUNING
-    assert endpoint_names.count("l1_room_temperature_fine_tuning") == 1
-
-    # The endpoint should be the child's version with S_102_85
-    fine_tuning = next(
-        e for e in endpoints if e.name == "l1_room_temperature_fine_tuning"
-    )
-    assert fine_tuning.sensor_endpoint_id == "S_102_85"
-    assert fine_tuning == L1EndpointsWithRoomSensor.ROOM_TEMPERATURE_FINE_TUNING
-    assert fine_tuning != L1Endpoints.ROOM_TEMPERATURE_FINE_TUNING
+    assert no_sensor_drop.name == room_sensor_drop.name == "l1_temperature_drop"
+    assert no_sensor_drop.sensor_endpoint_id == "S_89_85"
+    assert room_sensor_drop.sensor_endpoint_id == "S_87_85"
 
 
-def test_iterate_endpoints_real_l1_with_room_sensor_has_additional_endpoints():
-    """L1EndpointsWithRoomSensor should have additional room sensor endpoints."""
-    base_endpoints = list(L1Endpoints.iterate_endpoints())
-    child_endpoints = list(L1EndpointsWithRoomSensor.iterate_endpoints())
+def test_l1_room_sensor_has_room_specific_endpoints():
+    """L1RoomSensor exposes endpoints that have no L1NoRoomSensor counterpart."""
+    names = {e.name for e in L1RoomSensor.iterate_endpoints()}
 
-    # Child should have more endpoints (room temp, room temp setpoint, potentiometer)
-    assert len(child_endpoints) > len(base_endpoints)
-
-    # Verify the additional endpoints are present
-    child_names = [e.name for e in child_endpoints]
-    assert "l1_room_temperature" in child_names
-    assert "l1_room_temperature_setpoint" in child_names
-    assert "l1_room_sensor_potentiometer" in child_names
+    assert "l1_room_temperature" in names
+    assert "l1_room_temperature_setpoint" in names
+    assert "l1_room_sensor_potentiometer" in names
+    assert "l1_delayed_room_temperature" in names
+    assert "l1_room_temperature_setpoint_user" in names
