@@ -44,13 +44,17 @@ async def main():
         values = await client.get_values(registry_set)
 
         print(f"Outside temp: {values[SystemEndpoints.OUTSIDE_TEMPERATURE]} °C")
-        print(f"L1 supply temp: {values[L1Endpoints.WATER_OUT_TEMPERATURE]} °C")
+        print(f"L1 supply temp: {values[L1Endpoints.SUPPLY_WATER_TEMPERATURE]} °C")
 
         # Set home/away mode
-        await client.set_home_away(HomeAwayControl.HOME)
+        await client.set_endpoint_value(
+            SystemEndpoints.HOME_AWAY_MODE, HomeAwayControl.HOME
+        )
 
         # Set L1 operation mode
-        await client.set_l1_operation_mode(OperationMode.AUTOMATIC)
+        await client.set_endpoint_value(
+            L1Endpoints.OPERATION_MODE, OperationMode.AUTOMATIC
+        )
 
         await client.logout()
 
