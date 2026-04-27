@@ -1,6 +1,7 @@
 from collections.abc import Generator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import cached_property
+from typing import final
 
 from .const import (
     HomeAwayControl,
@@ -27,7 +28,7 @@ class OumanRegistry:
     @classmethod
     def iterate_endpoints(cls) -> Generator[OumanEndpoint]:
         """Iterate over the OumanEndpoints defined directly on this class."""
-        for value in cls.__dict__.values():
+        for value in cls.__dict__.values():  # pyright: ignore[reportAny]
             if isinstance(value, OumanEndpoint):
                 yield value
 
@@ -70,6 +71,7 @@ class OumanRegistrySet:
         return self._sensor_id_endpoint_map.get(id)
 
 
+@final
 class SystemEndpoints(OumanRegistry):
     """System-wide endpoints for the Ouman EH-800 device."""
 
@@ -116,6 +118,7 @@ class SystemEndpoints(OumanRegistry):
     )
 
 
+@final
 class L1BaseEndpoints(OumanRegistry):
     """L1 endpoints that are always queryable regardless of configuration."""
 
@@ -204,6 +207,7 @@ class L1BaseEndpoints(OumanRegistry):
     )
 
 
+@final
 class L1ThreePointCurve(OumanRegistry):
     """L1 3-point heating curve setpoints.
 
@@ -239,6 +243,7 @@ class L1ThreePointCurve(OumanRegistry):
     )
 
 
+@final
 class L1FivePointCurve(OumanRegistry):
     """L1 5-point heating curve setpoints.
 
@@ -294,6 +299,7 @@ class L1FivePointCurve(OumanRegistry):
     )
 
 
+@final
 class L1NoRoomSensor(OumanRegistry):
     """L1 endpoints exposed when no room sensor is installed.
 
@@ -333,6 +339,7 @@ class L1NoRoomSensor(OumanRegistry):
     )
 
 
+@final
 class L1RoomSensor(OumanRegistry):
     """L1 endpoints exposed when a room sensor is installed.
 
@@ -400,6 +407,7 @@ class L1RoomSensor(OumanRegistry):
     )
 
 
+@final
 class L1ConstantTempMode(OumanRegistry):
     """L1 endpoints exposed when the heating mode is constant temperature
     controller (manual p.27-28). Additive on top of L1BaseEndpoints; not
@@ -415,6 +423,7 @@ class L1ConstantTempMode(OumanRegistry):
     )
 
 
+@final
 class L2BaseEndpoints(OumanRegistry):
     """L2 endpoints that are always queryable when L2 is enabled.
 
@@ -507,6 +516,7 @@ class L2BaseEndpoints(OumanRegistry):
     )
 
 
+@final
 class L2ThreePointCurve(OumanRegistry):
     """L2 3-point heating curve setpoints.
 
@@ -542,6 +552,7 @@ class L2ThreePointCurve(OumanRegistry):
     )
 
 
+@final
 class L2FivePointCurve(OumanRegistry):
     """L2 5-point heating curve setpoints.
 
@@ -594,6 +605,7 @@ class L2FivePointCurve(OumanRegistry):
     )
 
 
+@final
 class L2NoRoomSensor(OumanRegistry):
     """L2 endpoints exposed when no room sensor is installed.
 
@@ -628,6 +640,7 @@ class L2NoRoomSensor(OumanRegistry):
     )
 
 
+@final
 class L2RoomSensor(OumanRegistry):
     """L2 endpoints exposed when a room sensor is installed.
 
@@ -709,6 +722,7 @@ class L2RoomSensor(OumanRegistry):
 # ---------------------------------------------------------------------------
 
 
+@final
 class RelayPumpSummerStop(OumanRegistry):
     """Relay control endpoint when the relay is configured for pump summer
     stop. Uses PumpSummerStopControl (Auto / Stop / Run).
@@ -728,6 +742,7 @@ class RelayPumpSummerStop(OumanRegistry):
     )
 
 
+@final
 class RelayTemperature(OumanRegistry):
     """Relay control endpoint when the relay is configured to follow a
     temperature measurement. Uses RelayControl (Auto / ON / OFF)."""
@@ -742,6 +757,7 @@ class RelayTemperature(OumanRegistry):
     )
 
 
+@final
 class RelayTempDifference(OumanRegistry):
     """Relay control endpoint when the relay is configured to follow a
     temperature difference. Uses RelayControl (Auto / ON / OFF)."""
@@ -756,6 +772,7 @@ class RelayTempDifference(OumanRegistry):
     )
 
 
+@final
 class RelayL1ValvePosition(OumanRegistry):
     """Relay control endpoint when the relay is configured to follow the L1
     valve position. Uses RelayControl (Auto / ON / OFF)."""
@@ -770,6 +787,7 @@ class RelayL1ValvePosition(OumanRegistry):
     )
 
 
+@final
 class RelayTimeProgram(OumanRegistry):
     """Relay control endpoint when the relay is configured to follow a time
     program. Uses RelayControl (Auto / ON / OFF)."""

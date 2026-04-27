@@ -73,10 +73,10 @@ class OumanEh800Client:
     def __init__(
         self, session: ClientSession, address: str, username: str, password: str
     ):
-        self._session = session
-        self._address = address
-        self._username = username
-        self._password = password
+        self._session: ClientSession = session
+        self._address: str = address
+        self._username: str = username
+        self._password: str = password
 
     @staticmethod
     def _parse_api_response(response_text: str) -> _OumanResponse:
@@ -85,7 +85,7 @@ class OumanEh800Client:
 
         # Handle null byte at the end of the response
         if pairs and pairs[-1] == "\x00":
-            pairs.pop()
+            _ = pairs.pop()
 
         values_result = {}
         for pair in pairs:
@@ -185,7 +185,7 @@ class OumanEh800Client:
         """
         response = await self._get_values(registry_set.sensor_endpoint_ids)
 
-        result = {}
+        result: dict[OumanEndpoint, OumanValues] = {}
         for key, value in response.values.items():
             endpoint = registry_set.get_endpoint_by_sensor_id(key)
             if not endpoint:
@@ -219,7 +219,7 @@ class OumanEh800Client:
         if not (endpoint.min_val <= value <= endpoint.max_val):
             raise ValueError(
                 f"Value for {endpoint.name} out of bounds "
-                f"[{endpoint.min_val},{endpoint.max_val}]: {value}"
+                + f"[{endpoint.min_val},{endpoint.max_val}]: {value}"
             )
         params = {endpoint.control_endpoint_id: str(value)}
         result = await self._update_values(params)
@@ -239,7 +239,7 @@ class OumanEh800Client:
         if float_result != value:
             raise OumanClientError(
                 "Returned float does not match set int value. "
-                f"Got {result_value}, expected {value}"
+                + f"Got {result_value}, expected {value}"
             )
 
         return float_result
@@ -253,7 +253,7 @@ class OumanEh800Client:
         if not (endpoint.min_val <= value <= endpoint.max_val):
             raise ValueError(
                 f"Value for {endpoint.name} out of bounds "
-                f"[{endpoint.min_val},{endpoint.max_val}]: {value}"
+                + f"[{endpoint.min_val},{endpoint.max_val}]: {value}"
             )
         rounded_value = round(value, 1)
         params = {endpoint.control_endpoint_id: str(round(value, 1))}
@@ -274,7 +274,7 @@ class OumanEh800Client:
         if float_result != rounded_value:
             raise OumanClientError(
                 "Returned float does not match set value. "
-                f"Got {result_value}, expected {value}"
+                + f"Got {result_value}, expected {value}"
             )
 
         return float_result
@@ -285,27 +285,28 @@ class OumanEh800Client:
         if not isinstance(value, endpoint.enum_type):
             raise TypeError(
                 f"Unexpected type for {endpoint.name} value. "
-                f"Expected {endpoint.enum_type}, got {value}."
+                + f"Expected {endpoint.enum_type}, got {value}."
             )
         params = {endpoint_id: value for endpoint_id in endpoint.control_endpoint_ids}
         result = await self._update_values(params)
 
+        result_value = None
         for endpoint_id in endpoint.response_endpoint_ids:
             if not (result_value := result.values.get(endpoint_id)):
                 raise OumanClientError(
                     f"Endpoint ID missing from set enum endpoint response: {result}"
                 )
 
-        if result_value != value:
+        if result_value is None or result_value != value:
             raise OumanClientError(
                 "Returned value does not match str enum value. "
-                f"Got '{result_value}', expected '{value}'"
+                + f"Got '{result_value}', expected '{value}'"
             )
         try:
             enum_result = endpoint.parse_value(result_value)
         except ValueError as err:
             raise OumanClientError(
-                f"API returned value cannot be parsed into an enum: {enum_result}"
+                f"API returned value cannot be parsed into an enum: {result_value}"
             ) from err
         return enum_result
 
@@ -327,15 +328,15 @@ class OumanEh800Client:
             TypeError: If the endpoint is not controllable or value type is wrong.
             ValueError: If the value is out of bounds.
         """
-        if not isinstance(endpoint, ControllableEndpoint):
-            raise TypeError(f"Endpoint {endpoint} is not a controllable endpoint.")
+        if not isinstance(endpoint, ControllableEndpoint):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise TypeError(f"Endpoint {endpoint} is not a controllable endpoint.")  # pyright: ignore[reportUnreachable]
 
         result: OumanValues
         if isinstance(endpoint, IntControlOumanEndpoint):
             if not isinstance(value, int | float):
                 raise TypeError(
                     f"Value for {endpoint.name} must be numeric, "
-                    f"got {type(value).__name__}"
+                    + f"got {type(value).__name__}"
                 )
             if not value.is_integer():
                 raise ValueError(
@@ -346,14 +347,14 @@ class OumanEh800Client:
             if not isinstance(value, int | float):
                 raise TypeError(
                     f"Value for {endpoint.name} must be numeric, "
-                    f"got {type(value).__name__}"
+                    + f"got {type(value).__name__}"
                 )
             result = await self._set_float_endpoint(endpoint, value)
         elif isinstance(endpoint, EnumControlOumanEndpoint):
             if not isinstance(value, ControlEnum):
                 raise TypeError(
                     f"Value for {endpoint.name} must be a ControlEnum, "
-                    f"got {type(value).__name__}"
+                    + f"got {type(value).__name__}"
                 )
             result = await self._set_enum_endpoint(endpoint, value)
         else:
