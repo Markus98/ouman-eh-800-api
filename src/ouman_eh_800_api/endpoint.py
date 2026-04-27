@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import override
 
 from .const import ControlEnum, OumanUnit, OumanValues
 
@@ -31,6 +32,7 @@ class ControllableEndpoint:
 class NumberOumanEndpoint(OumanEndpoint):
     """Endpoint that returns numeric (float) values."""
 
+    @override
     def parse_value(self, value: str) -> float:
         return float(value)
 
@@ -49,6 +51,7 @@ class EnumControlOumanEndpoint(OumanEndpoint, ControllableEndpoint):
     response_endpoint_ids: Sequence[str]
     enum_type: type[ControlEnum]
 
+    @override
     def parse_value(self, value: str) -> ControlEnum:
         return self.enum_type(value)
 
