@@ -44,7 +44,10 @@ dev = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "--cov=src --cov-report=term-missing"
+addopts = "--cov=src --cov-report=term-missing --ignore=tests/integration"
+markers = [
+    "integration: tests that run against a real Ouman EH-800 device (not run by default)",
+]
 
 [tool.coverage.report]
 fail_under = 95
