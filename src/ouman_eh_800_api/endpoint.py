@@ -23,7 +23,7 @@ class OumanEndpoint:
         return value
 
 
-class ControllableEndpoint:
+class ControllableEndpoint(OumanEndpoint):
     """Base marker class for all writable endpoints."""
 
     pass
@@ -38,7 +38,7 @@ class NumberOumanEndpoint(OumanEndpoint):
 
 
 @dataclass(frozen=True)
-class EnumControlOumanEndpoint(OumanEndpoint, ControllableEndpoint):
+class EnumControlOumanEndpoint(ControllableEndpoint):
     """Controllable endpoint that accepts enum values.
 
     Attributes:
