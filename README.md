@@ -95,12 +95,6 @@ returns the right composition automatically. Manual composition via
 - Python 3.13+
 - aiohttp
 
-## Disclaimer
-
-This client has been developed and tested with the Ouman EH-800 unit that was available to the developer. It did not have all features enabled, thus there may be missing features or bugs.
-
-The L2 heating circuit and room sensor endpoints have not been verified.
-
 ## Contributing
 
 Pull requests for new features or bug fixes are welcome. Please open an issue first to discuss major changes.
