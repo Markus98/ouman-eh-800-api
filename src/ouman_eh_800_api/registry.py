@@ -140,22 +140,22 @@ class L1BaseEndpoints(OumanRegistry):
         max_val=100,
     )
 
-    WATER_OUT_MIN_TEMP = IntControlOumanEndpoint(
+    WATER_OUT_MIN_TEMP = FloatControlOumanEndpoint(
         name="l1_water_out_minimum_temperature",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_54_85",
         control_endpoint_id="@_S_54_85",
-        min_val=5,
-        max_val=95,
+        min_val=5.0,
+        max_val=95.0,
     )
 
-    WATER_OUT_MAX_TEMP = IntControlOumanEndpoint(
+    WATER_OUT_MAX_TEMP = FloatControlOumanEndpoint(
         name="l1_water_out_maximum_temperature",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_55_85",
         control_endpoint_id="@_S_55_85",
-        min_val=5,
-        max_val=95,
+        min_val=5.0,
+        max_val=95.0,
     )
 
     TEMPERATURE_LEVEL_STATUS_TEXT = OumanEndpoint(
@@ -311,22 +311,22 @@ class L1NoRoomSensor(OumanRegistry):
     sensor, room-temp-°C drop with one).
     """
 
-    TEMPERATURE_DROP = IntControlOumanEndpoint(
+    TEMPERATURE_DROP = FloatControlOumanEndpoint(
         name="l1_temperature_drop",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_89_85",
         control_endpoint_id="@_S_89_85",
-        min_val=0,
-        max_val=90,
+        min_val=0.0,
+        max_val=90.0,
     )
 
-    BIG_TEMPERATURE_DROP = IntControlOumanEndpoint(
+    BIG_TEMPERATURE_DROP = FloatControlOumanEndpoint(
         name="l1_big_temperature_drop",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_90_85",
         control_endpoint_id="@_S_90_85",
-        min_val=0,
-        max_val=90,
+        min_val=0.0,
+        max_val=90.0,
     )
 
     ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
@@ -346,22 +346,22 @@ class L1RoomSensor(OumanRegistry):
     Mutually exclusive with L1NoRoomSensor.
     """
 
-    TEMPERATURE_DROP = IntControlOumanEndpoint(
+    TEMPERATURE_DROP = FloatControlOumanEndpoint(
         name="l1_temperature_drop",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_87_85",
         control_endpoint_id="@_S_87_85",
-        min_val=0,
-        max_val=90,
+        min_val=0.0,
+        max_val=90.0,
     )
 
-    BIG_TEMPERATURE_DROP = IntControlOumanEndpoint(
+    BIG_TEMPERATURE_DROP = FloatControlOumanEndpoint(
         name="l1_big_temperature_drop",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_88_85",
         control_endpoint_id="@_S_88_85",
-        min_val=0,
-        max_val=90,
+        min_val=0.0,
+        max_val=90.0,
     )
 
     ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
@@ -373,13 +373,13 @@ class L1RoomSensor(OumanRegistry):
         max_val=4.0,
     )
 
-    ROOM_TEMPERATURE_SETPOINT_USER = IntControlOumanEndpoint(
+    ROOM_TEMPERATURE_SETPOINT_USER = FloatControlOumanEndpoint(
         name="l1_room_temperature_setpoint_user",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_81_85",
         control_endpoint_id="@_S_81_85",
-        min_val=5,
-        max_val=50,
+        min_val=5.0,
+        max_val=50.0,
     )
 
     ROOM_SENSOR_POTENTIOMETER = NumberOumanEndpoint(
@@ -413,13 +413,13 @@ class L1ConstantTempMode(OumanRegistry):
     controller (manual p.27-28). Additive on top of L1BaseEndpoints; not
     auto-detected — caller opt-in via OumanRegistrySet composition."""
 
-    CONSTANT_TEMP_SETPOINT = IntControlOumanEndpoint(
+    CONSTANT_TEMP_SETPOINT = FloatControlOumanEndpoint(
         name="l1_constant_temp_setpoint",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_127_85",
         control_endpoint_id="@_S_127_85",
-        min_val=0,
-        max_val=95,
+        min_val=0.0,
+        max_val=95.0,
     )
 
 
@@ -449,22 +449,22 @@ class L2BaseEndpoints(OumanRegistry):
         max_val=100,
     )
 
-    WATER_OUT_MIN_TEMP = IntControlOumanEndpoint(
+    WATER_OUT_MIN_TEMP = FloatControlOumanEndpoint(
         name="l2_water_out_minimum_temperature",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_141_85",
         control_endpoint_id="@_S_141_85",
-        min_val=5,
-        max_val=95,
+        min_val=5.0,
+        max_val=95.0,
     )
 
-    WATER_OUT_MAX_TEMP = IntControlOumanEndpoint(
+    WATER_OUT_MAX_TEMP = FloatControlOumanEndpoint(
         name="l2_water_out_maximum_temperature",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_142_85",
         control_endpoint_id="@_S_142_85",
-        min_val=5,
-        max_val=95,
+        min_val=5.0,
+        max_val=95.0,
     )
 
     TEMPERATURE_LEVEL_STATUS_TEXT = OumanEndpoint(
@@ -612,22 +612,22 @@ class L2NoRoomSensor(OumanRegistry):
     Mutually exclusive with L2RoomSensor.
     """
 
-    TEMPERATURE_DROP = IntControlOumanEndpoint(
+    TEMPERATURE_DROP = FloatControlOumanEndpoint(
         name="l2_temperature_drop",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_176_85",
         control_endpoint_id="@_S_176_85",
-        min_val=0,
-        max_val=90,
+        min_val=0.0,
+        max_val=90.0,
     )
 
-    BIG_TEMPERATURE_DROP = IntControlOumanEndpoint(
+    BIG_TEMPERATURE_DROP = FloatControlOumanEndpoint(
         name="l2_big_temperature_drop",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_177_85",
         control_endpoint_id="@_S_177_85",
-        min_val=0,
-        max_val=90,
+        min_val=0.0,
+        max_val=90.0,
     )
 
     ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
@@ -647,22 +647,22 @@ class L2RoomSensor(OumanRegistry):
     Mutually exclusive with L2NoRoomSensor.
     """
 
-    TEMPERATURE_DROP = IntControlOumanEndpoint(
+    TEMPERATURE_DROP = FloatControlOumanEndpoint(
         name="l2_temperature_drop",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_174_85",
         control_endpoint_id="@_S_174_85",
-        min_val=0,
-        max_val=90,
+        min_val=0.0,
+        max_val=90.0,
     )
 
-    BIG_TEMPERATURE_DROP = IntControlOumanEndpoint(
+    BIG_TEMPERATURE_DROP = FloatControlOumanEndpoint(
         name="l2_big_temperature_drop",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_175_85",
         control_endpoint_id="@_S_175_85",
-        min_val=0,
-        max_val=90,
+        min_val=0.0,
+        max_val=90.0,
     )
 
     ROOM_TEMPERATURE_FINE_TUNING = FloatControlOumanEndpoint(
@@ -674,13 +674,13 @@ class L2RoomSensor(OumanRegistry):
         max_val=4.0,
     )
 
-    ROOM_TEMPERATURE_SETPOINT_USER = IntControlOumanEndpoint(
+    ROOM_TEMPERATURE_SETPOINT_USER = FloatControlOumanEndpoint(
         name="l2_room_temperature_setpoint_user",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_168_85",
         control_endpoint_id="@_S_168_85",
-        min_val=5,
-        max_val=50,
+        min_val=5.0,
+        max_val=50.0,
     )
 
     ROOM_TEMPERATURE = NumberOumanEndpoint(
