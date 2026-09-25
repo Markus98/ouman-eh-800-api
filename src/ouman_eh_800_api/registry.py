@@ -99,6 +99,15 @@ class SystemEndpoints(OumanRegistry):
         sensor_endpoint_id="S_227_85",
     )
 
+    AUTUMN_DRYING_OUTDOOR_TEMP_LIMIT = IntControlOumanEndpoint(
+        name="autumn_drying_outdoor_temperature_limit",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_118_85",
+        control_endpoint_id="@_S_118_85",
+        min_val=0,
+        max_val=15,
+    )
+
     RELAY_CONFIGURATION_TYPE = OumanEndpoint(
         name="relay_configuration_type",
         unit=None,
@@ -192,6 +201,12 @@ class L1BaseEndpoints(OumanRegistry):
         name="l1_fine_adjustment_effect",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_286_85",
+    )
+
+    AUTUMN_DRYING_EFFECT = NumberOumanEndpoint(
+        name="l1_autumn_drying_effect",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_266_85",
     )
 
     SUPPLY_WATER_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
@@ -305,10 +320,10 @@ class L1NoRoomSensor(OumanRegistry):
 
     Mutually exclusive with L1RoomSensor. Endpoints intentionally share
     `name` with their L1RoomSensor counterparts where they overlap
-    (TEMPERATURE_DROP, BIG_TEMPERATURE_DROP, ROOM_TEMPERATURE_FINE_TUNING)
-    — the user-facing setting is conceptually the same; only the
-    underlying control axis differs (supply-water-°C drop without a
-    sensor, room-temp-°C drop with one).
+    (TEMPERATURE_DROP, BIG_TEMPERATURE_DROP, ROOM_TEMPERATURE_FINE_TUNING,
+    AUTUMN_DRYING_SETPOINT) — the user-facing setting is conceptually the
+    same; only the underlying control axis differs (supply-water-°C
+    drop/raise without a sensor, room-temp-°C drop/raise with one).
     """
 
     TEMPERATURE_DROP = FloatControlOumanEndpoint(
@@ -336,6 +351,15 @@ class L1NoRoomSensor(OumanRegistry):
         control_endpoint_id="@_S_134_85",
         min_val=-4.0,
         max_val=4.0,
+    )
+
+    AUTUMN_DRYING_SETPOINT = FloatControlOumanEndpoint(
+        name="l1_autumn_drying_setpoint",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_86_85",
+        control_endpoint_id="@_S_86_85",
+        min_val=0.0,
+        max_val=15.0,
     )
 
 
@@ -371,6 +395,15 @@ class L1RoomSensor(OumanRegistry):
         control_endpoint_id="@_S_102_85",
         min_val=-4.0,
         max_val=4.0,
+    )
+
+    AUTUMN_DRYING_SETPOINT = FloatControlOumanEndpoint(
+        name="l1_autumn_drying_setpoint",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_85_85",
+        control_endpoint_id="@_S_85_85",
+        min_val=0.0,
+        max_val=5.0,
     )
 
     ROOM_TEMPERATURE_SETPOINT_USER = FloatControlOumanEndpoint(
@@ -501,6 +534,12 @@ class L2BaseEndpoints(OumanRegistry):
         name="l2_delayed_outdoor_temperature_effect",
         unit=OumanUnit.CELSIUS,
         sensor_endpoint_id="S_292_85",
+    )
+
+    AUTUMN_DRYING_EFFECT = NumberOumanEndpoint(
+        name="l2_autumn_drying_effect",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_300_85",
     )
 
     SUPPLY_WATER_TEMPERATURE_SETPOINT = NumberOumanEndpoint(
@@ -639,6 +678,15 @@ class L2NoRoomSensor(OumanRegistry):
         max_val=4.0,
     )
 
+    AUTUMN_DRYING_SETPOINT = FloatControlOumanEndpoint(
+        name="l2_autumn_drying_setpoint",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_173_85",
+        control_endpoint_id="@_S_173_85",
+        min_val=0.0,
+        max_val=15.0,
+    )
+
 
 @final
 class L2RoomSensor(OumanRegistry):
@@ -672,6 +720,15 @@ class L2RoomSensor(OumanRegistry):
         control_endpoint_id="@_S_189_85",
         min_val=-4.0,
         max_val=4.0,
+    )
+
+    AUTUMN_DRYING_SETPOINT = FloatControlOumanEndpoint(
+        name="l2_autumn_drying_setpoint",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_172_85",
+        control_endpoint_id="@_S_172_85",
+        min_val=0.0,
+        max_val=5.0,
     )
 
     ROOM_TEMPERATURE_SETPOINT_USER = FloatControlOumanEndpoint(
