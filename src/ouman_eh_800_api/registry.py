@@ -857,3 +857,50 @@ class RelayTimeProgram(OumanRegistry):
         response_endpoint_ids=("S_362_85",),
         enum_type=RelayControl,
     )
+
+
+# ---------------------------------------------------------------------------
+# Optional measurement fragments
+#
+# Measurement channels 3-5 can be assigned to a factory-set temperature
+# measurement (manual p.24-26). While a channel is in use the `measures?`
+# response lists the sensor ID that carries its reading. Any number of
+# these fragments can be active at once. A configured channel with no
+# sensor wired reports -999.9.
+# ---------------------------------------------------------------------------
+
+
+@final
+class ReturnWaterSensor(OumanRegistry):
+    """Endpoints exposed when a measurement channel is assigned to the
+    return water temperature."""
+
+    RETURN_WATER_TEMPERATURE = NumberOumanEndpoint(
+        name="return_water_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_283_85",
+    )
+
+
+@final
+class AccumulatorSensor(OumanRegistry):
+    """Endpoints exposed when a measurement channel is assigned to the
+    accumulator temperature."""
+
+    ACCUMULATOR_TEMPERATURE = NumberOumanEndpoint(
+        name="accumulator_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_237_85",
+    )
+
+
+@final
+class BoilerSensor(OumanRegistry):
+    """Endpoints exposed when a measurement channel is assigned to the
+    boiler temperature."""
+
+    BOILER_TEMPERATURE = NumberOumanEndpoint(
+        name="boiler_temperature",
+        unit=OumanUnit.CELSIUS,
+        sensor_endpoint_id="S_238_85",
+    )

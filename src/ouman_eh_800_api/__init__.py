@@ -22,6 +22,8 @@ from .exceptions import (
     OumanClientError,
 )
 from .registry import (
+    AccumulatorSensor,
+    BoilerSensor,
     L1BaseEndpoints,
     L1ConstantTempMode,
     L1FivePointCurve,
@@ -40,6 +42,7 @@ from .registry import (
     RelayTempDifference,
     RelayTemperature,
     RelayTimeProgram,
+    ReturnWaterSensor,
     SystemEndpoints,
 )
 
@@ -73,6 +76,9 @@ __all__ = [
     "RelayTempDifference",
     "RelayL1ValvePosition",
     "RelayTimeProgram",
+    "ReturnWaterSensor",
+    "AccumulatorSensor",
+    "BoilerSensor",
     # Endpoint types
     "OumanEndpoint",
     "OumanValues",
