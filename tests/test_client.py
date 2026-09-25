@@ -791,6 +791,58 @@ async def test_get_is_l2_room_sensor_installed(
 
 
 # =============================================================================
+# Tests for get_is_l1_summer_function_active
+# =============================================================================
+
+
+@pytest.mark.asyncio
+async def test_get_is_l1_summer_function_active_true(
+    client: OumanEh800Client, m: aioresponses
+):
+    # Captured from a device with the summer function holding the valve
+    # closed: the row has no sensor id, the trailing 0 is the unit flag.
+    m.get(
+        f"{MOCK_ADDRESS}/waterinfol1?{MOCK_DATE_PARAM}",
+        body="waterinfol1?Kesätoiminto Säädin ajaa venttiilin kiinni kesätoiminnassa,,0;\x00",
+        status=200,
+    )
+
+    assert await client.get_is_l1_summer_function_active() is True
+
+
+@pytest.mark.asyncio
+async def test_get_is_l1_summer_function_active_false(
+    client: OumanEh800Client, m: aioresponses
+):
+    m.get(
+        f"{MOCK_ADDRESS}/waterinfol1?{MOCK_DATE_PARAM}",
+        body=(
+            "waterinfol1?Menovesi säätökäyrän mukaan,S_260_85,1;"
+            "Hienosäädön vaikutus,S_286_85,1;"
+            "Laskennall. menoveden asetusarvo,S_275_85,1;"
+            "L1 Menoveden lämpötila,S_259_85,1;\x00"
+        ),
+        status=200,
+    )
+
+    assert await client.get_is_l1_summer_function_active() is False
+
+
+@pytest.mark.asyncio
+async def test_get_is_l1_summer_function_active_false_in_shutdown(
+    client: OumanEh800Client, m: aioresponses
+):
+    # Shutdown mode uses the S_0_0 placeholder id, which must not count.
+    m.get(
+        f"{MOCK_ADDRESS}/waterinfol1?{MOCK_DATE_PARAM}",
+        body="waterinfol1?L1 Alasajo,S_0_0,1,0;Menoveden asetusarvo,S_275_85,1;\x00",
+        status=200,
+    )
+
+    assert await client.get_is_l1_summer_function_active() is False
+
+
+# =============================================================================
 # Tests for _is_l*_five_point_curve
 # =============================================================================
 

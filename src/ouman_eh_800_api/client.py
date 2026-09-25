@@ -411,6 +411,25 @@ class OumanEh800Client:
             L2BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
         )
 
+    async def get_is_l1_summer_function_active(self) -> bool:
+        """Check if the summer function currently holds the L1 valve closed.
+
+        The device exposes no register for this state. It is only visible in
+        the `waterinfol1?` factor list (manual p.10), where every factor row
+        is `<label>,<sensor id>,<unit flag>` except the summer function,
+        which has no numeric effect and is listed with an empty sensor id.
+
+        Returns:
+            True if the summer function is active, False otherwise.
+        """
+        body = await self._fetch_raw("waterinfol1")
+        _, _, rows = body.partition("?")
+        for row in rows.split(";"):
+            fields = row.split(",")
+            if len(fields) >= 2 and fields[1] == "":
+                return True
+        return False
+
     async def _is_l1_five_point_curve(self) -> bool:
         # The 5-point curve uses a disjoint set of sensor IDs from the
         # 3-point curve. Detect by looking for a 5-point ID in the raw
