@@ -133,6 +133,14 @@ async def test_get_is_l1_room_sensor_installed_returns_bool(
     assert isinstance(result, bool)
 
 
+async def test_get_is_l1_summer_function_active_returns_bool(
+    client: OumanEh800Client,
+) -> None:
+    result = await client.get_is_l1_summer_function_active()
+    print(f"\nis_l1_summer_function_active: {result!r}")
+    assert isinstance(result, bool)
+
+
 async def test_get_is_l2_room_sensor_installed_returns_bool(
     client: OumanEh800Client,
 ) -> None:
