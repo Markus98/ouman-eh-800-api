@@ -18,6 +18,8 @@ from ouman_eh_800_api.exceptions import (
     OumanClientError,
 )
 from ouman_eh_800_api.registry import (
+    AccumulatorSensor,
+    BoilerSensor,
     L1BaseEndpoints,
     L1FivePointCurve,
     L1NoRoomSensor,
@@ -34,6 +36,7 @@ from ouman_eh_800_api.registry import (
     RelayTempDifference,
     RelayTemperature,
     RelayTimeProgram,
+    ReturnWaterSensor,
     SystemEndpoints,
 )
 
@@ -881,6 +884,53 @@ async def test_get_relay_fragment(
 
 
 # =============================================================================
+# Tests for _get_measurement_fragments
+# =============================================================================
+
+
+_MEASURES_BASE_BODY = (
+    "Ulkolämpötila,S_227_85,1;L1 Menoveden lämpötila,S_259_85,1;"
+    "L1 Venttiilin asento,S_272_85,2;"
+)
+
+
+@pytest.mark.parametrize(
+    "body,expected",
+    [
+        (_MEASURES_BASE_BODY, []),
+        (
+            "Ulkolämpötila,S_227_85,1;L1 Menoveden lämpötila,S_259_85,1;"
+            "Paluuveden lämpötila,S_283_85,1;L1 Venttiilin asento,S_272_85,2;",
+            [ReturnWaterSensor],
+        ),
+        (
+            "Ulkolämpötila,S_227_85,1;L1 Menoveden lämpötila,S_259_85,1;"
+            "Varaajan lämpötila,S_237_85,1;Paluuveden lämpötila,S_283_85,1;"
+            "L1 Venttiilin asento,S_272_85,2;",
+            [ReturnWaterSensor, AccumulatorSensor],
+        ),
+        (
+            "Ulkolämpötila,S_227_85,1;Kattilan lämpötila,S_238_85,1;"
+            "L1 Huonelämpötila,S_261_85,1;L1 Venttiilin asento,S_272_85,2;",
+            [BoilerSensor],
+        ),
+    ],
+    ids=["none", "return_water", "accumulator_and_return_water", "boiler"],
+)
+@pytest.mark.asyncio
+async def test_get_measurement_fragments(
+    client: OumanEh800Client, m: aioresponses, body: str, expected
+):
+    m.get(
+        f"{MOCK_ADDRESS}/measures?{MOCK_DATE_PARAM}",
+        body=f"measures?{body}\x00",
+        status=200,
+    )
+
+    assert await client._get_measurement_fragments() == expected
+
+
+# =============================================================================
 # Tests for get_active_registries
 # =============================================================================
 
@@ -914,6 +964,7 @@ async def test_get_active_registries_l1_only_no_room_sensor_three_point(
 ):
     _mock_settings(m, "settingsl1", _THREE_POINT_L1_BODY)
     _mock_settings(m, "relay", _RELAY_NOT_IN_USE_BODY)
+    _mock_settings(m, "measures", _MEASURES_BASE_BODY)
     _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "off")
     _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "0")
 
@@ -933,6 +984,7 @@ async def test_get_active_registries_l1_with_room_sensor_five_point(
 ):
     _mock_settings(m, "settingsl1", _FIVE_POINT_L1_BODY)
     _mock_settings(m, "relay", _RELAY_NOT_IN_USE_BODY)
+    _mock_settings(m, "measures", _MEASURES_BASE_BODY)
     _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "on")
     _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "0")
 
@@ -953,6 +1005,7 @@ async def test_get_active_registries_l1_and_l2_no_room_sensors(
     _mock_settings(m, "settingsl1", _THREE_POINT_L1_BODY)
     _mock_settings(m, "settingsl2", _THREE_POINT_L2_BODY)
     _mock_settings(m, "relay", _RELAY_NOT_IN_USE_BODY)
+    _mock_settings(m, "measures", _MEASURES_BASE_BODY)
     _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "off")
     _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "1")
     _mock_request(m, L2BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "off")
@@ -977,6 +1030,7 @@ async def test_get_active_registries_all_with_room_sensors(
     _mock_settings(m, "settingsl1", _FIVE_POINT_L1_BODY)
     _mock_settings(m, "settingsl2", _FIVE_POINT_L2_BODY)
     _mock_settings(m, "relay", _RELAY_NOT_IN_USE_BODY)
+    _mock_settings(m, "measures", _MEASURES_BASE_BODY)
     _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "on")
     _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "1")
     _mock_request(m, L2BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "on")
@@ -1000,12 +1054,41 @@ async def test_get_active_registries_with_relay_temperature_mode(
 ):
     _mock_settings(m, "settingsl1", _THREE_POINT_L1_BODY)
     _mock_settings(m, "relay", "Automaatti,S_330_85;ON,S_330_85;OFF,S_330_85;")
+    _mock_settings(m, "measures", _MEASURES_BASE_BODY)
     _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "off")
     _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "0")
 
     result = await client.get_active_registries()
 
     assert RelayTemperature in result.registries
+
+
+@pytest.mark.asyncio
+async def test_get_active_registries_with_optional_measurements(
+    client: OumanEh800Client, m: aioresponses
+):
+    _mock_settings(m, "settingsl1", _THREE_POINT_L1_BODY)
+    _mock_settings(m, "relay", _RELAY_NOT_IN_USE_BODY)
+    _mock_settings(
+        m,
+        "measures",
+        "Ulkolämpötila,S_227_85,1;L1 Menoveden lämpötila,S_259_85,1;"
+        "Varaajan lämpötila,S_237_85,1;Paluuveden lämpötila,S_283_85,1;"
+        "L1 Venttiilin asento,S_272_85,2;",
+    )
+    _mock_request(m, L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id, "off")
+    _mock_request(m, SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id, "0")
+
+    result = await client.get_active_registries()
+
+    assert set(result.registries) == {
+        SystemEndpoints,
+        L1BaseEndpoints,
+        L1ThreePointCurve,
+        L1NoRoomSensor,
+        ReturnWaterSensor,
+        AccumulatorSensor,
+    }
 
 
 # =============================================================================
