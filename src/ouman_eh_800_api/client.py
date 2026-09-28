@@ -22,6 +22,8 @@ from .exceptions import (
     OumanClientError,
 )
 from .registry import (
+    AccumulatorSensor,
+    BoilerSensor,
     L1BaseEndpoints,
     L1FivePointCurve,
     L1NoRoomSensor,
@@ -39,6 +41,7 @@ from .registry import (
     RelayTempDifference,
     RelayTemperature,
     RelayTimeProgram,
+    ReturnWaterSensor,
     SystemEndpoints,
 )
 
@@ -50,6 +53,14 @@ _RELAY_FRAGMENTS_BY_SENSOR_ID: Mapping[str, type[OumanRegistry]] = {
     RelayTempDifference.CONTROL.sensor_endpoint_id: RelayTempDifference,
     RelayL1ValvePosition.CONTROL.sensor_endpoint_id: RelayL1ValvePosition,
     RelayTimeProgram.CONTROL.sensor_endpoint_id: RelayTimeProgram,
+}
+
+# Map from the sensor ID a measurement channel presents in the `measures?`
+# response to the registry fragment that models it.
+_MEASUREMENT_FRAGMENTS_BY_SENSOR_ID: Mapping[str, type[OumanRegistry]] = {
+    ReturnWaterSensor.RETURN_WATER_TEMPERATURE.sensor_endpoint_id: ReturnWaterSensor,
+    AccumulatorSensor.ACCUMULATOR_TEMPERATURE.sensor_endpoint_id: AccumulatorSensor,
+    BoilerSensor.BOILER_TEMPERATURE.sensor_endpoint_id: BoilerSensor,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -432,6 +443,16 @@ class OumanEh800Client:
                 return fragment
         return None
 
+    async def _get_measurement_fragments(self) -> list[type[OumanRegistry]]:
+        # `measures?` lists every measurement channel in use together with
+        # the sensor ID that carries its reading.
+        body = await self._fetch_raw("measures")
+        return [
+            fragment
+            for sensor_id, fragment in _MEASUREMENT_FRAGMENTS_BY_SENSOR_ID.items()
+            if sensor_id in body
+        ]
+
     async def get_active_registries(self) -> OumanRegistrySet:
         """Get the list of active registries which contain the sets of
         endpoints that can currently be read and written to."""
@@ -460,6 +481,8 @@ class OumanEh800Client:
 
         if (relay_fragment := await self._get_relay_fragment()) is not None:
             registries.append(relay_fragment)
+
+        registries.extend(await self._get_measurement_fragments())
 
         return OumanRegistrySet(registries)
 

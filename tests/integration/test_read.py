@@ -18,6 +18,8 @@ from ouman_eh_800_api.endpoint import (
     OumanEndpoint,
 )
 from ouman_eh_800_api.registry import (
+    AccumulatorSensor,
+    BoilerSensor,
     L1BaseEndpoints,
     L1ConstantTempMode,
     L1FivePointCurve,
@@ -36,6 +38,7 @@ from ouman_eh_800_api.registry import (
     RelayTempDifference,
     RelayTemperature,
     RelayTimeProgram,
+    ReturnWaterSensor,
     SystemEndpoints,
 )
 
@@ -57,6 +60,9 @@ ALL_REGISTRIES: list[type[OumanRegistry]] = [
     RelayTempDifference,
     RelayL1ValvePosition,
     RelayTimeProgram,
+    ReturnWaterSensor,
+    AccumulatorSensor,
+    BoilerSensor,
 ]
 
 pytestmark = pytest.mark.integration

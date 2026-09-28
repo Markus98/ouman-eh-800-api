@@ -89,6 +89,7 @@ returns the right composition automatically. Manual composition via
 | `L2NoRoomSensor` / `L2RoomSensor` | Same for L2 |
 | `L1ConstantTempMode` | Setpoint exposed when L1 heating mode is constant-temperature controller |
 | `RelayPumpSummerStop`, `RelayTemperature`, `RelayTempDifference`, `RelayL1ValvePosition`, `RelayTimeProgram` | Relay-control override; one active depending on the configured relay mode |
+| `ReturnWaterSensor`, `AccumulatorSensor`, `BoilerSensor` | Optional temperature measurements on channels 3-5; active when a channel is assigned to that measurement |
 
 ## Requirements
 
