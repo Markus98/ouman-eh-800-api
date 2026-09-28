@@ -71,6 +71,7 @@ asyncio.run(main())
 - Set home/away mode
 - Support for L1 and L2 heating circuits
 - Support for optional room sensors
+- Detect whether the summer function is holding the L1 valve closed
 
 ## Available Registries
 
