@@ -842,6 +842,20 @@ async def test_get_is_l1_summer_function_active_false_in_shutdown(
     assert await client.get_is_l1_summer_function_active() is False
 
 
+@pytest.mark.asyncio
+async def test_get_is_l1_summer_function_active_unexpected_response_raises(
+    client: OumanEh800Client, m: aioresponses
+):
+    m.get(
+        f"{MOCK_ADDRESS}/waterinfol1?{MOCK_DATE_PARAM}",
+        body="<html>not a device response</html>",
+        status=200,
+    )
+
+    with pytest.raises(OumanClientError, match="Unexpected response from waterinfol1"):
+        await client.get_is_l1_summer_function_active()
+
+
 # =============================================================================
 # Tests for _is_l*_five_point_curve
 # =============================================================================

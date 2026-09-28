@@ -421,9 +421,16 @@ class OumanEh800Client:
 
         Returns:
             True if the summer function is active, False otherwise.
+
+        Raises:
+            OumanClientError: If the response is not a waterinfol1 listing.
         """
         body = await self._fetch_raw("waterinfol1")
-        _, _, rows = body.partition("?")
+        prefix, _, rows = body.partition("?")
+        if prefix != "waterinfol1":
+            raise OumanClientError(
+                f"Unexpected response from waterinfol1 request: {body!r}"
+            )
         for row in rows.split(";"):
             fields = row.split(",")
             if len(fields) >= 2 and fields[1] == "":
