@@ -38,6 +38,29 @@ class NumberOumanEndpoint(OumanEndpoint):
 
 
 @dataclass(frozen=True)
+class TextBoolOumanEndpoint(OumanEndpoint):
+    """Endpoint whose localized device text maps to a boolean.
+
+    Any other text parses to None.
+
+    Attributes:
+        true_values: Device texts that mean True.
+        false_values: Device texts that mean False.
+    """
+
+    true_values: frozenset[str]
+    false_values: frozenset[str]
+
+    @override
+    def parse_value(self, value: str) -> bool | None:
+        if value in self.true_values:
+            return True
+        if value in self.false_values:
+            return False
+        return None
+
+
+@dataclass(frozen=True)
 class EnumControlOumanEndpoint(ControllableEndpoint):
     """Controllable endpoint that accepts enum values.
 

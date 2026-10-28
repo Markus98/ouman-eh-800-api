@@ -9,6 +9,7 @@ from ouman_eh_800_api.registry import (
     L2BaseEndpoints,
     OumanRegistry,
     OumanRegistrySet,
+    RelayPumpSummerStop,
     SystemEndpoints,
 )
 
@@ -198,3 +199,32 @@ def test_l1_room_sensor_has_room_specific_endpoints():
     assert "l1_room_sensor_potentiometer" in names
     assert "l1_delayed_room_temperature" in names
     assert "l1_room_temperature_setpoint_user" in names
+
+
+# =============================================================================
+# Tests for RelayPumpSummerStop.PUMP_RUNNING parsing
+# =============================================================================
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("Käy", True),
+        ("Seis", False),
+        ("I drift", True),
+        ("Stopp", False),
+        ("Run", True),
+        ("Stop", False),
+        ("Sisse lülitatud", True),
+        ("Seisatud", False),
+        ("Вкл.", True),
+        ("Откл.", False),
+        ("Uruchom", True),
+    ],
+)
+def test_pump_running_parse_value(value: str, expected: bool):
+    assert RelayPumpSummerStop.PUMP_RUNNING.parse_value(value) is expected
+
+
+def test_pump_running_parse_value_unknown_is_none():
+    assert RelayPumpSummerStop.PUMP_RUNNING.parse_value("Rele ei käytössä") is None

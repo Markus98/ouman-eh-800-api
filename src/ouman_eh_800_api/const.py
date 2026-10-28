@@ -45,8 +45,9 @@ class PumpSummerStopControl(StrEnum):
 ControlEnum = HomeAwayControl | OperationMode | RelayControl | PumpSummerStopControl
 """Type alias which contains all of the possible enums used for control operations"""
 
-OumanValues = str | float | ControlEnum
-"""Type alias for possible endpoint values: string, float, or a control enum."""
+OumanValues = str | float | bool | None | ControlEnum
+"""Type alias for possible endpoint values: string, float, bool (None when the
+register currently holds no such state), or a control enum."""
 
 
 class OumanUnit(StrEnum):

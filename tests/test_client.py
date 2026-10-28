@@ -627,7 +627,7 @@ async def test_get_values_single_registry(client: OumanEh800Client, m: aiorespon
 
     m.get(
         f"{MOCK_ADDRESS}/request?{params}%3B{MOCK_DATE_PARAM}",
-        body="request?S_26_85=600;S_135_85=0;S_227_85=-13.3;S_1002_85=test;S_1004_85=ok;S_140_85=0;\x00",
+        body="request?S_26_85=600;S_135_85=0;S_227_85=-13.3;S_1002_85=test;S_140_85=0;\x00",
         status=200,
     )
 
@@ -649,7 +649,7 @@ async def test_get_values_unknown_endpoint_logs_warning(
     # Response includes an unknown endpoint
     m.get(
         f"{MOCK_ADDRESS}/request?{params}%3B{MOCK_DATE_PARAM}",
-        body="request?S_26_85=600;S_135_85=0;S_227_85=-13.3;S_1002_85=test;S_1004_85=ok;S_140_85=0;UNKNOWN_ID=123;\x00",
+        body="request?S_26_85=600;S_135_85=0;S_227_85=-13.3;S_1002_85=test;S_140_85=0;UNKNOWN_ID=123;\x00",
         status=200,
     )
 

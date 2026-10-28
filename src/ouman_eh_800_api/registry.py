@@ -16,6 +16,7 @@ from .endpoint import (
     IntControlOumanEndpoint,
     NumberOumanEndpoint,
     OumanEndpoint,
+    TextBoolOumanEndpoint,
 )
 
 
@@ -112,12 +113,6 @@ class SystemEndpoints(OumanRegistry):
         name="relay_configuration_type",
         unit=None,
         sensor_endpoint_id="S_1002_85",
-    )
-
-    RELAY_STATUS_TEXT = OumanEndpoint(
-        name="relay_status_text",
-        unit=None,
-        sensor_endpoint_id="S_1004_85",
     )
 
     L2_INSTALLED_STATUS = OumanEndpoint(
@@ -796,6 +791,19 @@ class RelayPumpSummerStop(OumanRegistry):
         control_endpoint_ids=("S_364_85",),
         response_endpoint_ids=("S_364_85",),
         enum_type=PumpSummerStopControl,
+    )
+
+    # The relay state register holds localized text in this mode. Strings
+    # cover all six UI languages (fi, sv, en, et, ru, pl); Polish shares
+    # "Stop" with English.
+    PUMP_RUNNING = TextBoolOumanEndpoint(
+        name="pump_running",
+        unit=None,
+        sensor_endpoint_id="S_1004_85",
+        true_values=frozenset(
+            {"Käy", "I drift", "Run", "Sisse lülitatud", "Вкл.", "Uruchom"}
+        ),
+        false_values=frozenset({"Seis", "Stopp", "Stop", "Seisatud", "Откл."}),
     )
 
 

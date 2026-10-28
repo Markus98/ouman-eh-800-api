@@ -82,14 +82,14 @@ returns the right composition automatically. Manual composition via
 
 | Registry | Description |
 |----------|-------------|
-| `SystemEndpoints` | System-wide (outside temp, home/away, relay status, etc.) |
+| `SystemEndpoints` | System-wide (outside temp, home/away, relay mode, etc.) |
 | `L1BaseEndpoints` / `L2BaseEndpoints` | Per-circuit endpoints always queryable when the circuit is in use |
 | `L1ThreePointCurve` / `L1FivePointCurve` | L1 heating-curve setpoints (mutually exclusive) |
 | `L2ThreePointCurve` / `L2FivePointCurve` | L2 heating-curve setpoints (mutually exclusive) |
 | `L1NoRoomSensor` / `L1RoomSensor` | L1 endpoints whose IDs differ depending on whether a room sensor is installed |
 | `L2NoRoomSensor` / `L2RoomSensor` | Same for L2 |
 | `L1ConstantTempMode` | Setpoint exposed when L1 heating mode is constant-temperature controller |
-| `RelayPumpSummerStop`, `RelayTemperature`, `RelayTempDifference`, `RelayL1ValvePosition`, `RelayTimeProgram` | Relay-control override; one active depending on the configured relay mode |
+| `RelayPumpSummerStop`, `RelayTemperature`, `RelayTempDifference`, `RelayL1ValvePosition`, `RelayTimeProgram` | Relay-control override; one active depending on the configured relay mode. `RelayPumpSummerStop` also reports whether the pump is running |
 | `ReturnWaterSensor`, `AccumulatorSensor`, `BoilerSensor` | Optional temperature measurements on channels 3-5; active when a channel is assigned to that measurement |
 
 ## Requirements
