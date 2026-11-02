@@ -15,6 +15,7 @@ from .endpoint import (
     IntControlOumanEndpoint,
     NumberOumanEndpoint,
     OumanEndpoint,
+    TextBoolOumanEndpoint,
 )
 from .exceptions import (
     OumanClientAuthenticationError,
@@ -87,6 +88,7 @@ __all__ = [
     "IntControlOumanEndpoint",
     "FloatControlOumanEndpoint",
     "EnumControlOumanEndpoint",
+    "TextBoolOumanEndpoint",
     # Exceptions
     "OumanClientError",
     "OumanClientAuthenticationError",

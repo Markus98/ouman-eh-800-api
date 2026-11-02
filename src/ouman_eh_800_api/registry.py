@@ -16,6 +16,7 @@ from .endpoint import (
     IntControlOumanEndpoint,
     NumberOumanEndpoint,
     OumanEndpoint,
+    TextBoolOumanEndpoint,
 )
 
 
@@ -112,12 +113,6 @@ class SystemEndpoints(OumanRegistry):
         name="relay_configuration_type",
         unit=None,
         sensor_endpoint_id="S_1002_85",
-    )
-
-    RELAY_STATUS_TEXT = OumanEndpoint(
-        name="relay_status_text",
-        unit=None,
-        sensor_endpoint_id="S_1004_85",
     )
 
     L2_INSTALLED_STATUS = OumanEndpoint(
@@ -798,6 +793,27 @@ class RelayPumpSummerStop(OumanRegistry):
         enum_type=PumpSummerStopControl,
     )
 
+    # The relay state register holds localized text in this mode. Strings
+    # cover all six UI languages (fi, sv, en, et, ru, pl); Polish shares
+    # "Stop" with English.
+    PUMP_RUNNING = TextBoolOumanEndpoint(
+        name="pump_running",
+        unit=None,
+        sensor_endpoint_id="S_1004_85",
+        true_values=frozenset(
+            {"Käy", "I drift", "Run", "Sisse lülitatud", "Вкл.", "Uruchom"}
+        ),
+        false_values=frozenset({"Seis", "Stopp", "Stop", "Seisatud", "Откл."}),
+    )
+
+
+# Relay state texts in the four modes that use RelayControl. ON/OFF is
+# shared by fi, en and pl; the Swedish manual shows both ON and På/Av.
+# Only the Finnish OFF has been seen on a device, the rest come from the
+# manuals, which are inconsistent for sv and ru.
+_RELAY_ON_VALUES = frozenset({"ON", "På", "SEES", "ВКЛ"})
+_RELAY_OFF_VALUES = frozenset({"OFF", "Av", "VÄLJAS", "выкл."})
+
 
 @final
 class RelayTemperature(OumanRegistry):
@@ -811,6 +827,14 @@ class RelayTemperature(OumanRegistry):
         control_endpoint_ids=("S_330_85",),
         response_endpoint_ids=("S_330_85",),
         enum_type=RelayControl,
+    )
+
+    RELAY_ON = TextBoolOumanEndpoint(
+        name="relay_on",
+        unit=None,
+        sensor_endpoint_id="S_1004_85",
+        true_values=_RELAY_ON_VALUES,
+        false_values=_RELAY_OFF_VALUES,
     )
 
 
@@ -828,6 +852,14 @@ class RelayTempDifference(OumanRegistry):
         enum_type=RelayControl,
     )
 
+    RELAY_ON = TextBoolOumanEndpoint(
+        name="relay_on",
+        unit=None,
+        sensor_endpoint_id="S_1004_85",
+        true_values=_RELAY_ON_VALUES,
+        false_values=_RELAY_OFF_VALUES,
+    )
+
 
 @final
 class RelayL1ValvePosition(OumanRegistry):
@@ -843,6 +875,14 @@ class RelayL1ValvePosition(OumanRegistry):
         enum_type=RelayControl,
     )
 
+    RELAY_ON = TextBoolOumanEndpoint(
+        name="relay_on",
+        unit=None,
+        sensor_endpoint_id="S_1004_85",
+        true_values=_RELAY_ON_VALUES,
+        false_values=_RELAY_OFF_VALUES,
+    )
+
 
 @final
 class RelayTimeProgram(OumanRegistry):
@@ -856,6 +896,14 @@ class RelayTimeProgram(OumanRegistry):
         control_endpoint_ids=("S_362_85",),
         response_endpoint_ids=("S_362_85",),
         enum_type=RelayControl,
+    )
+
+    RELAY_ON = TextBoolOumanEndpoint(
+        name="relay_on",
+        unit=None,
+        sensor_endpoint_id="S_1004_85",
+        true_values=_RELAY_ON_VALUES,
+        false_values=_RELAY_OFF_VALUES,
     )
 
 
