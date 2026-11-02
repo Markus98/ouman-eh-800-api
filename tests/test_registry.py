@@ -9,7 +9,11 @@ from ouman_eh_800_api.registry import (
     L2BaseEndpoints,
     OumanRegistry,
     OumanRegistrySet,
+    RelayL1ValvePosition,
     RelayPumpSummerStop,
+    RelayTempDifference,
+    RelayTemperature,
+    RelayTimeProgram,
     SystemEndpoints,
 )
 
@@ -228,3 +232,33 @@ def test_pump_running_parse_value(value: str, expected: bool):
 
 def test_pump_running_parse_value_unknown_is_none():
     assert RelayPumpSummerStop.PUMP_RUNNING.parse_value("Rele ei käytössä") is None
+
+
+# =============================================================================
+# Tests for RELAY_ON parsing on the RelayControl fragments
+# =============================================================================
+
+
+@pytest.mark.parametrize(
+    "registry",
+    [RelayTemperature, RelayTempDifference, RelayL1ValvePosition, RelayTimeProgram],
+)
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("ON", True),
+        ("OFF", False),
+        ("På", True),
+        ("Av", False),
+        ("SEES", True),
+        ("VÄLJAS", False),
+        ("ВКЛ", True),
+        ("выкл.", False),
+    ],
+)
+def test_relay_on_parse_value(registry: type[OumanRegistry], value: str, expected: bool):
+    assert registry.RELAY_ON.parse_value(value) is expected
+
+
+def test_relay_on_parse_value_unknown_is_none():
+    assert RelayTemperature.RELAY_ON.parse_value("Rele ei käytössä") is None

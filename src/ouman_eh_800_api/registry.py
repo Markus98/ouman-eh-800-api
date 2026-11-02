@@ -807,6 +807,14 @@ class RelayPumpSummerStop(OumanRegistry):
     )
 
 
+# Relay state texts in the four modes that use RelayControl. ON/OFF is
+# shared by fi, en and pl; the Swedish manual shows both ON and På/Av.
+# Only the Finnish OFF has been seen on a device, the rest come from the
+# manuals, which are inconsistent for sv and ru.
+_RELAY_ON_VALUES = frozenset({"ON", "På", "SEES", "ВКЛ"})
+_RELAY_OFF_VALUES = frozenset({"OFF", "Av", "VÄLJAS", "выкл."})
+
+
 @final
 class RelayTemperature(OumanRegistry):
     """Relay control endpoint when the relay is configured to follow a
@@ -819,6 +827,14 @@ class RelayTemperature(OumanRegistry):
         control_endpoint_ids=("S_330_85",),
         response_endpoint_ids=("S_330_85",),
         enum_type=RelayControl,
+    )
+
+    RELAY_ON = TextBoolOumanEndpoint(
+        name="relay_on",
+        unit=None,
+        sensor_endpoint_id="S_1004_85",
+        true_values=_RELAY_ON_VALUES,
+        false_values=_RELAY_OFF_VALUES,
     )
 
 
@@ -836,6 +852,14 @@ class RelayTempDifference(OumanRegistry):
         enum_type=RelayControl,
     )
 
+    RELAY_ON = TextBoolOumanEndpoint(
+        name="relay_on",
+        unit=None,
+        sensor_endpoint_id="S_1004_85",
+        true_values=_RELAY_ON_VALUES,
+        false_values=_RELAY_OFF_VALUES,
+    )
+
 
 @final
 class RelayL1ValvePosition(OumanRegistry):
@@ -851,6 +875,14 @@ class RelayL1ValvePosition(OumanRegistry):
         enum_type=RelayControl,
     )
 
+    RELAY_ON = TextBoolOumanEndpoint(
+        name="relay_on",
+        unit=None,
+        sensor_endpoint_id="S_1004_85",
+        true_values=_RELAY_ON_VALUES,
+        false_values=_RELAY_OFF_VALUES,
+    )
+
 
 @final
 class RelayTimeProgram(OumanRegistry):
@@ -864,6 +896,14 @@ class RelayTimeProgram(OumanRegistry):
         control_endpoint_ids=("S_362_85",),
         response_endpoint_ids=("S_362_85",),
         enum_type=RelayControl,
+    )
+
+    RELAY_ON = TextBoolOumanEndpoint(
+        name="relay_on",
+        unit=None,
+        sensor_endpoint_id="S_1004_85",
+        true_values=_RELAY_ON_VALUES,
+        false_values=_RELAY_OFF_VALUES,
     )
 
 

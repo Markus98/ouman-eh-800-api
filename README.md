@@ -89,7 +89,7 @@ returns the right composition automatically. Manual composition via
 | `L1NoRoomSensor` / `L1RoomSensor` | L1 endpoints whose IDs differ depending on whether a room sensor is installed |
 | `L2NoRoomSensor` / `L2RoomSensor` | Same for L2 |
 | `L1ConstantTempMode` | Setpoint exposed when L1 heating mode is constant-temperature controller |
-| `RelayPumpSummerStop`, `RelayTemperature`, `RelayTempDifference`, `RelayL1ValvePosition`, `RelayTimeProgram` | Relay-control override; one active depending on the configured relay mode. `RelayPumpSummerStop` also reports whether the pump is running |
+| `RelayPumpSummerStop`, `RelayTemperature`, `RelayTempDifference`, `RelayL1ValvePosition`, `RelayTimeProgram` | Relay-control override; one active depending on the configured relay mode. Each fragment also reports the relay state (`PUMP_RUNNING` or `RELAY_ON`) |
 | `ReturnWaterSensor`, `AccumulatorSensor`, `BoilerSensor` | Optional temperature measurements on channels 3-5; active when a channel is assigned to that measurement |
 
 ## Requirements
