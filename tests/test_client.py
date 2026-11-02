@@ -11,7 +11,8 @@ from aiohttp import ClientSession
 from aioresponses import aioresponses
 
 from ouman_eh_800_api.client import OumanEh800Client
-from ouman_eh_800_api.const import HomeAwayControl, OperationMode
+from ouman_eh_800_api.const import HomeAwayControl, OperationMode, OumanValues
+from ouman_eh_800_api.endpoint import OumanEndpoint
 from ouman_eh_800_api.exceptions import (
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
@@ -30,6 +31,7 @@ from ouman_eh_800_api.registry import (
     L2NoRoomSensor,
     L2RoomSensor,
     L2ThreePointCurve,
+    OumanRegistry,
     OumanRegistrySet,
     RelayL1ValvePosition,
     RelayPumpSummerStop,
@@ -657,6 +659,61 @@ async def test_get_values_unknown_endpoint_logs_warning(
 
     assert "Unexpected endpoint ID" in caplog.text
     assert "UNKNOWN_ID" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "registry,endpoint,raw,expected",
+    [
+        (SystemEndpoints, SystemEndpoints.RELAY_CONFIGURATION_TYPE, "test", "test"),
+        (SystemEndpoints, SystemEndpoints.OUTSIDE_TEMPERATURE, "-13.3", -13.3),
+        (SystemEndpoints, SystemEndpoints.TREND_SAMPLE_INTERVAL, "600", 600.0),
+        (L1BaseEndpoints, L1BaseEndpoints.WATER_OUT_MIN_TEMP, "20.5", 20.5),
+        (SystemEndpoints, SystemEndpoints.HOME_AWAY_MODE, "1", HomeAwayControl.AWAY),
+        (RelayPumpSummerStop, RelayPumpSummerStop.PUMP_RUNNING, "Käy", True),
+        (RelayPumpSummerStop, RelayPumpSummerStop.PUMP_RUNNING, "Seis", False),
+        (
+            RelayPumpSummerStop,
+            RelayPumpSummerStop.PUMP_RUNNING,
+            "Rele ei käytössä",
+            None,
+        ),
+        (RelayTemperature, RelayTemperature.RELAY_ON, "OFF", False),
+    ],
+    ids=[
+        "str",
+        "float",
+        "int-control",
+        "float-control",
+        "enum-control",
+        "text-bool-true",
+        "text-bool-false",
+        "text-bool-none",
+        "relay-on",
+    ],
+)
+@pytest.mark.asyncio
+async def test_get_values_parses_endpoint_type(
+    client: OumanEh800Client,
+    m: aioresponses,
+    registry: type[OumanRegistry],
+    endpoint: OumanEndpoint,
+    raw: str,
+    expected: OumanValues,
+):
+    """Each endpoint type's parse_value is applied to the device response."""
+    registry_set = OumanRegistrySet([registry])
+    params = "%3B".join(registry_set.sensor_endpoint_ids)
+
+    m.get(
+        f"{MOCK_ADDRESS}/request?{params}%3B{MOCK_DATE_PARAM}",
+        body=f"request?{endpoint.sensor_endpoint_id}={raw};\x00",
+        status=200,
+    )
+
+    result = await client.get_values(registry_set)
+
+    assert result[endpoint] == expected
+    assert type(result[endpoint]) is type(expected)
 
 
 # =============================================================================
