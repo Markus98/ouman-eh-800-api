@@ -46,9 +46,9 @@ MOCK_PASSWORD = "password"
 
 
 MOCK_DATE_PARAM = (
-    "Tue%252C+06+Jan+2026+12%253A00%253A00+GMT%253D"  # "Tue, 06 Jan 2026 12:00:00 GMT="
+    "Tue%2C+06+Jan+2026+12%3A00%3A00+GMT="  # "Tue, 06 Jan 2026 12:00:00 GMT="
 )
-MOCK_LOGIN_URL = f"{MOCK_ADDRESS}/login?uid={MOCK_USERNAME}%253Bpwd%253D{MOCK_PASSWORD}%253B{MOCK_DATE_PARAM}"
+MOCK_LOGIN_URL = f"{MOCK_ADDRESS}/login?uid={MOCK_USERNAME}%3Bpwd%3D{MOCK_PASSWORD}%3B{MOCK_DATE_PARAM}"
 MOCK_LOGOUT_URL = f"{MOCK_ADDRESS}/logout?{MOCK_DATE_PARAM}"
 
 
@@ -199,7 +199,7 @@ def test_construct_request_path_empty_params(client: OumanEh800Client):
 @pytest.mark.asyncio
 async def test_request_http_error(client: OumanEh800Client, m: aioresponses):
     m.get(
-        f"{MOCK_ADDRESS}/request?S_227_85%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?S_227_85%3B{MOCK_DATE_PARAM}",
         status=500,
     )
 
@@ -212,7 +212,7 @@ async def test_request_http_error(client: OumanEh800Client, m: aioresponses):
 @pytest.mark.asyncio
 async def test_request_network_error(client: OumanEh800Client, m: aioresponses):
     m.get(
-        f"{MOCK_ADDRESS}/request?S_227_85%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?S_227_85%3B{MOCK_DATE_PARAM}",
         exception=aiohttp.ClientError("Connection refused"),
     )
 
@@ -230,7 +230,7 @@ async def test_request_network_error(client: OumanEh800Client, m: aioresponses):
 @pytest.mark.asyncio
 async def test_get_values_success(client: OumanEh800Client, m: aioresponses):
     m.get(
-        f"{MOCK_ADDRESS}/request?S_227_85%253BS_259_85%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?S_227_85%3BS_259_85%3B{MOCK_DATE_PARAM}",
         body="request?S_227_85=-13.3;S_259_85=39.1;\x00",
         status=200,
     )
@@ -247,7 +247,7 @@ async def test_get_values_missing_endpoint_logs_warning(
     client: OumanEh800Client, m: aioresponses, caplog
 ):
     m.get(
-        f"{MOCK_ADDRESS}/request?S_227_85%253BS_259_85%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?S_227_85%3BS_259_85%3B{MOCK_DATE_PARAM}",
         body="request?S_227_85=-13.3;\x00",  # S_259_85 is missing
         status=200,
     )
@@ -623,10 +623,10 @@ async def test_set_endpoint_value_enum_with_wrong_type_raises(client: OumanEh800
 async def test_get_values_single_registry(client: OumanEh800Client, m: aioresponses):
     # Build the endpoint IDs that will be requested
     registry_set = OumanRegistrySet([SystemEndpoints])
-    params = "%253B".join(registry_set.sensor_endpoint_ids)
+    params = "%3B".join(registry_set.sensor_endpoint_ids)
 
     m.get(
-        f"{MOCK_ADDRESS}/request?{params}%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?{params}%3B{MOCK_DATE_PARAM}",
         body="request?S_26_85=600;S_135_85=0;S_227_85=-13.3;S_1002_85=test;S_1004_85=ok;S_140_85=0;\x00",
         status=200,
     )
@@ -644,11 +644,11 @@ async def test_get_values_unknown_endpoint_logs_warning(
     client: OumanEh800Client, m: aioresponses, caplog
 ):
     registry_set = OumanRegistrySet([SystemEndpoints])
-    params = "%253B".join(registry_set.sensor_endpoint_ids)
+    params = "%3B".join(registry_set.sensor_endpoint_ids)
 
     # Response includes an unknown endpoint
     m.get(
-        f"{MOCK_ADDRESS}/request?{params}%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?{params}%3B{MOCK_DATE_PARAM}",
         body="request?S_26_85=600;S_135_85=0;S_227_85=-13.3;S_1002_85=test;S_1004_85=ok;S_140_85=0;UNKNOWN_ID=123;\x00",
         status=200,
     )
@@ -668,7 +668,7 @@ async def test_get_values_unknown_endpoint_logs_warning(
 async def test_get_is_l2_installed_true(client: OumanEh800Client, m: aioresponses):
     endpoint_id = SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id
     m.get(
-        f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?{endpoint_id}%3B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=1;\x00",  # Non-zero means installed
         status=200,
     )
@@ -682,7 +682,7 @@ async def test_get_is_l2_installed_true(client: OumanEh800Client, m: aioresponse
 async def test_get_is_l2_installed_false(client: OumanEh800Client, m: aioresponses):
     endpoint_id = SystemEndpoints.L2_INSTALLED_STATUS.sensor_endpoint_id
     m.get(
-        f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?{endpoint_id}%3B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=0;\x00",
         status=200,
     )
@@ -703,7 +703,7 @@ async def test_get_is_room_sensor_installed_true(
 ):
     endpoint_id = L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
     m.get(
-        f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?{endpoint_id}%3B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=on;\x00",  # Non-"off" means installed
         status=200,
     )
@@ -719,7 +719,7 @@ async def test_get_is_room_sensor_installed_false(
 ):
     endpoint_id = L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
     m.get(
-        f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?{endpoint_id}%3B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=off;\x00",
         status=200,
     )
@@ -735,7 +735,7 @@ async def test_get_is_room_sensor_installed_on_with_error(
 ):
     endpoint_id = L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
     m.get(
-        f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?{endpoint_id}%3B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=on,error;\x00",
         status=200,
     )
@@ -751,7 +751,7 @@ async def test_get_is_room_sensor_installed_off_with_error(
 ):
     endpoint_id = L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
     m.get(
-        f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?{endpoint_id}%3B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=off,error;\x00",
         status=200,
     )
@@ -767,7 +767,7 @@ async def test_get_is_l1_room_sensor_installed(
 ):
     endpoint_id = L1BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
     m.get(
-        f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?{endpoint_id}%3B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=off;\x00",
         status=200,
     )
@@ -783,7 +783,7 @@ async def test_get_is_l2_room_sensor_installed(
 ):
     endpoint_id = L2BaseEndpoints.ROOM_SENSOR_INSTALLED.sensor_endpoint_id
     m.get(
-        f"{MOCK_ADDRESS}/request?{endpoint_id}%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?{endpoint_id}%3B{MOCK_DATE_PARAM}",
         body=f"request?{endpoint_id}=off;\x00",
         status=200,
     )
@@ -1003,7 +1003,7 @@ async def test_get_measurement_fragments(
 
 def _mock_request(m: aioresponses, sensor_id: str, value: str) -> None:
     m.get(
-        f"{MOCK_ADDRESS}/request?{sensor_id}%253B{MOCK_DATE_PARAM}",
+        f"{MOCK_ADDRESS}/request?{sensor_id}%3B{MOCK_DATE_PARAM}",
         body=f"request?{sensor_id}={value};\x00",
         status=200,
     )
